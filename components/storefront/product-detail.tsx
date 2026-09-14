@@ -1,0 +1,134 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { Check, Minus, Plus } from "lucide-react";
+import clsx from "clsx";
+import { ProductImage } from "@/components/storefront/product-grid";
+import { useStorefront } from "@/components/storefront/store-context";
+import {
+  primaryButtonClass,
+  secondaryButtonClass,
+} from "@/components/auth/styles";
+import { useCartStore } from "@/lib/cart-store";
+import {
+  formatNaira,
+  storePath,
+  type StoreProduct,
+} from "@/lib/storefront";
+
+export function ProductDetail({ product }: { product: StoreProduct }) {
+  const store = useStorefront();
+  const addItem = useCartStore((s) => s.addItem);
+  const [qty, setQty] = useState(1);
+  const [added, setAdded] = useState(false);
+
+  function addToCart() {
+    addItem(
+      {
+        productId: product.id,
+        slug: product.slug,
+        name: product.name,
+        price: product.price,
+        accent: product.accent,
+      },
+      qty,
+    );
+    setAdded(true);
+    window.setTimeout(() => setAdded(false), 1800);
+  }
+
+  return (
+    <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+      <ProductImage product={product} className="lg:sticky lg:top-24" />
+      <div>
+        <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-muted">
+          {product.category}
+        </p>
+        <h1 className="mt-2 font-display text-[32px] leading-10 tracking-tight text-heading sm:text-[40px] sm:leading-[1.15]">
+          {product.name}
+        </h1>
+        <p className="mt-4 flex flex-wrap items-baseline gap-3">
+          <span className="text-[24px] font-medium text-heading">
+            {formatNaira(product.price)}
+          </span>
+          {product.compareAt ? (
+            <span className="text-[16px] text-muted line-through">
+              {formatNaira(product.compareAt)}
+            </span>
+          ) : null}
+        </p>
+        {product.tags?.length ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {product.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-md bg-surface px-2.5 py-1 text-[12px] font-medium text-muted"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        ) : null}
+        <p className="mt-5 max-w-prose text-[15px] leading-6 text-muted">
+          {product.description}
+        </p>
+
+        <div className="mt-8 flex flex-wrap items-center gap-4">
+          <div className="inline-flex h-12 items-center rounded-lg border border-border">
+            <button
+              type="button"
+              className="px-3 text-heading hover:bg-surface"
+              aria-label="Decrease quantity"
+              onClick={() => setQty((q) => Math.max(1, q - 1))}
+            >
+              <Minus className="size-4" />
+            </button>
+            <span className="min-w-10 text-center text-[15px] font-medium tabular-nums">
+              {qty}
+            </span>
+            <button
+              type="button"
+              className="px-3 text-heading hover:bg-surface"
+              aria-label="Increase quantity"
+              onClick={() => setQty((q) => Math.min(20, q + 1))}
+            >
+              <Plus className="size-4" />
+            </button>
+          </div>
+          <button
+            type="button"
+            disabled={!product.inStock}
+            onClick={addToCart}
+            className={clsx(primaryButtonClass, "w-auto min-w-44 px-6")}
+          >
+            {added ? (
+              <span className="inline-flex items-center gap-2">
+                <Check className="size-4" /> Added
+              </span>
+            ) : product.inStock ? (
+              "Add to cart"
+            ) : (
+              "Out of stock"
+            )}
+          </button>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href={storePath(store.handle, "/cart")}
+            className={clsx(secondaryButtonClass, "w-auto px-5")}
+          >
+            View cart
+          </Link>
+          <Link
+            href={storePath(store.handle)}
+            className="inline-flex h-12 items-center text-[14px] font-medium text-link hover:text-link-hover"
+          >
+            ← All products
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

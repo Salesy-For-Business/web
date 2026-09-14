@@ -39,12 +39,19 @@ const periods: { id: RevenuePeriod; label: string }[] = [
 
 function ShareStoreButton({ handle }: { handle: string }) {
   const [copied, setCopied] = useState(false);
-  const url = `https://salesy.link/${handle}`;
+  const url =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/demo`
+      : "/demo";
 
   async function share() {
     try {
       if (navigator.share) {
-        await navigator.share({ title: "My Salesy store", url });
+        await navigator.share({
+          title: "My Salesy store",
+          text: `Shop my store (/${handle})`,
+          url,
+        });
         return;
       }
     } catch {

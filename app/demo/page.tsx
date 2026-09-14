@@ -1,0 +1,49 @@
+"use client";
+
+import { ContactChannels } from "@/components/storefront/contact-channels";
+import { ProductGrid } from "@/components/storefront/product-grid";
+import { useStorefront } from "@/components/storefront/store-context";
+
+export default function DemoStorePage() {
+  const store = useStorefront();
+
+  return (
+    <div className="space-y-12">
+      <section className="max-w-2xl">
+        <div className="flex items-center gap-4">
+          {store.logoDataUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={store.logoDataUrl}
+              alt=""
+              className="size-16 rounded-2xl hidden object-cover shadow-sm sm:size-20"
+            />
+          ) : null}
+          <div>
+            <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-muted">
+              salesy.link/{store.handle}
+            </p>
+            <h1 className="mt-1 font-display text-[36px] leading-10 tracking-tight text-heading sm:text-[44px] sm:leading-[1.1]">
+              {store.businessName}
+            </h1>
+          </div>
+        </div>
+        <p className="mt-4 text-[16px] leading-7 text-muted sm:text-[17px]">
+          {store.description}
+        </p>
+      </section>
+
+      <section>
+        <div className="mb-6 flex items-end justify-between gap-4">
+          <h2 className="font-display text-[22px] text-heading">Shop</h2>
+          <p className="text-[13px] text-muted">
+            {store.products.length} products
+          </p>
+        </div>
+        <ProductGrid products={store.products} />
+      </section>
+
+      <ContactChannels />
+    </div>
+  );
+}

@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { DEMO_OTP } from "@/lib/auth-schemas";
+import type { LiveChatProviderId } from "@/lib/live-chat";
 
 export type AuthStatus =
   | "anonymous"
@@ -48,6 +49,12 @@ export type AuthBusiness = {
   plan: AuthPlan;
   /** salesy.link/{handle} */
   storeHandle: string;
+  /** Live chat widget on the public storefront. */
+  liveChatEnabled: boolean;
+  /** Which provider the seller set up. */
+  liveChatProvider: LiveChatProviderId;
+  /** Pasted embed / widget snippet from the provider. */
+  liveChatSnippet: string;
 };
 
 /** 4-digit payout / transaction PIN (demo storage). */
@@ -105,6 +112,11 @@ type AuthState = {
     confirm: string,
   ) => { ok: true } | { ok: false; error: string };
   verifyPayoutPin: (pin: string) => { ok: true } | { ok: false; error: string };
+  setLiveChat: (input: {
+    enabled: boolean;
+    provider: LiveChatProviderId;
+    snippet: string;
+  }) => { ok: true } | { ok: false; error: string };
   signOut: () => void;
   clearOtpFlow: () => void;
 };
@@ -224,6 +236,9 @@ export const useAuthStore = create<AuthState>()(
             plan: business.plan ?? "free",
             storeHandle:
               business.storeHandle || slugifyHandle(business.businessName),
+            liveChatEnabled: business.liveChatEnabled ?? false,
+            liveChatProvider: business.liveChatProvider ?? "smartsupp",
+            liveChatSnippet: business.liveChatSnippet ?? "",
           },
           status: "signedIn",
           otpPurpose: null,
@@ -394,6 +409,29 @@ export const useAuthStore = create<AuthState>()(
         return { ok: true };
       },
 
+      setLiveChat: ({ enabled, provider, snippet }) => {
+        const { business } = get();
+        if (!business) {
+          return { ok: false, error: "Finish business setup first." };
+        }
+        const trimmed = snippet.trim();
+        if (enabled && !trimmed) {
+          return {
+            ok: false,
+            error: "Paste your chat widget code before turning live chat on.",
+          };
+        }
+        set({
+          business: {
+            ...business,
+            liveChatEnabled: enabled,
+            liveChatProvider: provider,
+            liveChatSnippet: trimmed,
+          },
+        });
+        return { ok: true };
+      },
+
       signOut: () => {
         set({
           status: "anonymous",
@@ -420,15 +458,16 @@ export const useAuthStore = create<AuthState>()(
       onRehydrateStorage: () => (state) => {
         if (state?.business) {
           const business = state.business;
-          if (!business.plan || !business.storeHandle) {
-            state.business = {
-              ...business,
-              plan: business.plan ?? "free",
-              storeHandle:
-                business.storeHandle ||
-                slugifyHandle(business.businessName || "mystore"),
-            };
-          }
+          state.business = {
+            ...business,
+            plan: business.plan ?? "free",
+            storeHandle:
+              business.storeHandle ||
+              slugifyHandle(business.businessName || "mystore"),
+            liveChatEnabled: business.liveChatEnabled ?? false,
+            liveChatProvider: business.liveChatProvider ?? "smartsupp",
+            liveChatSnippet: business.liveChatSnippet ?? "",
+          };
         }
         state?.setHydrated(true);
       },

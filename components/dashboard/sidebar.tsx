@@ -31,7 +31,9 @@ export function DashboardSidebar({
   const name = business?.businessName ?? "Your store";
   const plan = business?.plan ?? "free";
   const handle = business?.storeHandle ?? "mystore";
-  const storeUrl = `${window.location.origin}/${handle}`;
+  /** Demo storefront until live handles are wired. */
+  const storeUrl = "/demo";
+  // const storeUrl = `${window.location.origin}/${handle}`;
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -85,7 +87,7 @@ export function DashboardSidebar({
       </div>
 
       <div className="mt-4 space-y-1 px-3">
-        <a
+        <Link
           href={storeUrl}
           target="_blank"
           rel="noreferrer"
@@ -94,7 +96,7 @@ export function DashboardSidebar({
         >
           <ExternalLink className="size-4 shrink-0" aria-hidden />
           Live storefront
-        </a>
+        </Link>
         <button
           type="button"
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-[14px] font-medium text-heading hover:bg-surface"

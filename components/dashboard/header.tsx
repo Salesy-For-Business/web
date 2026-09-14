@@ -10,8 +10,8 @@ import { useAuthStore } from "@/lib/auth-store";
 export function DashboardHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
   const pathname = usePathname();
   const business = useAuthStore((s) => s.business);
-  const handle = business?.storeHandle ?? "mystore";
-  const storeUrl = `https://salesy.link/${handle}`;
+  /** Demo storefront until live handles are wired. */
+  const storeUrl = "/demo";
 
   const current =
     dashboardNav.find((item) =>
@@ -57,7 +57,7 @@ export function DashboardHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
             <Wallet className="size-4" aria-hidden />
             Withdraw
           </Link>
-          <a
+          <Link
             href={storeUrl}
             target="_blank"
             rel="noreferrer"
@@ -65,7 +65,7 @@ export function DashboardHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
           >
             <span className="hidden sm:inline">Visit store</span>
             <ExternalLink className="size-4" aria-hidden />
-          </a>
+          </Link>
           <button
             type="button"
             className="rounded-full border border-border p-2 text-muted hover:bg-surface hover:text-heading"

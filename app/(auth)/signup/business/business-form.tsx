@@ -143,6 +143,9 @@ function BusinessForm() {
       cacNumber: values.isRegistered ? values.cacNumber?.trim() : undefined,
       plan: "free",
       storeHandle: slugifyHandle(values.businessName),
+      liveChatEnabled: false,
+      liveChatProvider: "smartsupp",
+      liveChatSnippet: "",
     };
 
     completeBusiness(business);

@@ -34,7 +34,7 @@ export default function StoreProfilePage() {
         actions={
           <>
             <Link
-              href={`https://salesy.link/${business.storeHandle}`}
+              href="/demo"
               target="_blank"
               rel="noreferrer"
               className={clsx(secondaryButtonClass, "w-auto px-5")}

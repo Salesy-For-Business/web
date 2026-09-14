@@ -19,7 +19,7 @@ export default function Hero() {
           Start your store
         </Link>
         <Link
-          href="/#features"
+          href="/demo"
           className="inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] font-medium text-foreground hover:bg-tonal hover:text-link"
         >
           See Demo <ArrowRightIcon size={16} />

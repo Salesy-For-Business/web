@@ -3,6 +3,7 @@
 import Link from "next/link";
 import clsx from "clsx";
 import { DashboardPageHeader } from "@/components/dashboard/page-chrome";
+import { LiveChatSettings } from "@/components/dashboard/live-chat-settings";
 import {
   PayoutPinChange,
   PayoutPinSetup,
@@ -50,6 +51,8 @@ export default function SettingsPage() {
             </div>
           </dl>
         </section>
+
+        <LiveChatSettings />
 
         {payoutPin ? (
           <PayoutPinChange />
