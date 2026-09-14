@@ -6,7 +6,7 @@ import { ChevronDown, X } from "lucide-react";
 import clsx from "clsx";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { HomeHashLink } from "@/components/landing/home-hash-link";
-import { IS_SIGNED_IN } from "@/lib/demo";
+import { AccountNavLink } from "@/components/landing/account-nav-link";
 
 const exploreLinks = [
   { hash: "features", label: "Features" },
@@ -19,9 +19,6 @@ export default function Header() {
   const [exploreOpen, setExploreOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const exploreRef = useRef<HTMLDivElement>(null);
-
-  const accountHref = IS_SIGNED_IN ? "/dashboard" : "/signin";
-  const accountLabel = IS_SIGNED_IN ? "Dashboard" : "Sign in";
 
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
@@ -116,28 +113,18 @@ export default function Header() {
             ) : null}
           </div>
 
-          <HomeHashLink
-            hash="start"
+          <Link
+            href="/signup"
             className="text-[15px] font-medium text-link hover:text-link-hover"
           >
             Start your store
-          </HomeHashLink>
-          <Link
-            href={accountHref}
-            className="text-[15px] font-medium text-heading hover:text-link"
-          >
-            {accountLabel}
           </Link>
+          <AccountNavLink className="text-[15px] font-medium text-heading hover:text-link" />
           <ThemeToggle />
         </nav>
 
         <div className="flex items-center gap-5 lg:hidden">
-          <Link
-            href={accountHref}
-            className="text-[15px] font-medium text-heading hover:text-link"
-          >
-            {accountLabel}
-          </Link>
+          <AccountNavLink className="text-[15px] font-medium text-heading hover:text-link" />
           <button
             type="button"
             aria-expanded={menuOpen}
@@ -198,20 +185,17 @@ export default function Header() {
                 </Link>
               );
             })}
-            <HomeHashLink
-              hash="start"
+            <Link
+              href="/signup"
               className="py-3 text-[16px] font-medium text-link hover:text-link-hover"
               onClick={() => setMenuOpen(false)}
             >
               Start your store
-            </HomeHashLink>
-            <Link
-              href={accountHref}
+            </Link>
+            <AccountNavLink
               className="py-3 text-[16px] font-medium text-heading hover:text-link"
               onClick={() => setMenuOpen(false)}
-            >
-              {accountLabel}
-            </Link>
+            />
           </div>
 
           <div className="mt-6 border-t border-border pt-6">

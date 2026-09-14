@@ -190,7 +190,7 @@ export default function Pricing() {
               </ul>
 
               <a
-                href="#start"
+                href="/signup"
                 className={clsx(
                   "mt-8 inline-flex h-12 items-center justify-center rounded-lg border px-6 text-[15px] font-medium",
                   plan.featured

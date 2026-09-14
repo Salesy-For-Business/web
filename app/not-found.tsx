@@ -36,7 +36,7 @@ export default function NotFound() {
             Back to home
           </Link>
           <Link
-            href="/#start"
+            href="/signup"
             className="inline-flex h-12 items-center rounded-lg border border-border px-6 text-[15px] font-medium text-link hover:bg-surface hover:text-link"
           >
             Start your store

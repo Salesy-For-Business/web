@@ -71,13 +71,13 @@
   --muted: #9aa0a6;
   --link: #8ab4f8;
   --link-hover: #aecbfa;
-  --primary: #8ab4f8;
+  --primary: #1967d2;
   --primary-hover: #aecbfa;
   --tonal: #174ea6;
   --tonal-border: transparent;
-  --border: #5f6368;
+  --border: #3a3d41;
   --surface: #303134;
-  --surface-muted: #44464a;
+  --surface-muted: #313235;
 }
 
 @theme inline {

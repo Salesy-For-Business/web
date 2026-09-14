@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
 export default function Hero() {
@@ -10,21 +11,19 @@ export default function Hero() {
         Create an online store with a unique, shareable URL. Simple for
         entrepreneurs — detailed when your business needs more.
       </p>
-      <div className="flex mt-10 items-center justify-center flex-col md:flex-row gap-2">
-          <a
-            id="start"
-            href="#start"
-            className=" inline-flex h-12 items-center rounded-full border border-border px-6 text-[15px] font-medium text-link hover:bg-tonal hover:text-link"
-          >
-            Start your store
-          </a>
-          <a
-            id="start"
-            href="#start"
-            className=" inline-flex gap-2 h-12 items-center rounded-full px-6 text-[15px] font-medium text-foreground hover:bg-tonal hover:text-link"
-          >
-            See Demo <ArrowRightIcon size={16} />
-          </a>
+      <div className="mt-10 flex flex-col items-center justify-center gap-2 md:flex-row">
+        <Link
+          href="/signup"
+          className="inline-flex h-12 items-center rounded-full border border-border px-6 text-[15px] font-medium text-link hover:bg-tonal hover:text-link"
+        >
+          Start your store
+        </Link>
+        <Link
+          href="/#features"
+          className="inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] font-medium text-foreground hover:bg-tonal hover:text-link"
+        >
+          See Demo <ArrowRightIcon size={16} />
+        </Link>
       </div>
     </section>
   );

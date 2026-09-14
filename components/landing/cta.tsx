@@ -18,7 +18,7 @@ export default function Cta() {
         </p>
         <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <a
-            href="#start"
+            href="/signup"
             className="inline-flex h-12 items-center rounded-lg border border-primary bg-primary px-6 text-[15px] font-medium text-white hover:bg-primary-hover"
           >
             Start your store

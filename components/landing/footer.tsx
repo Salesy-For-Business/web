@@ -1,15 +1,13 @@
+"use client";
+
 import Link from "next/link";
 import { HomeHashLink } from "@/components/landing/home-hash-link";
+import { AccountNavLink } from "@/components/landing/account-nav-link";
 
 const productLinks = [
   { hash: "features", label: "Features" },
   { hash: "pricing", label: "Plans" },
   { hash: "faq", label: "FAQ" },
-];
-
-const companyLinks = [
-  { href: "/blog", label: "Blog" },
-  { href: "/signin", label: "Sign in" },
 ];
 
 const legalLinks = [
@@ -57,16 +55,17 @@ export default function Footer() {
               Company
             </p>
             <ul className="mt-4 flex flex-col gap-3">
-              {companyLinks.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-[14px] text-foreground hover:text-link"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link
+                  href="/blog"
+                  className="text-[14px] text-foreground hover:text-link"
+                >
+                  Blog
+                </Link>
+              </li>
+              <li>
+                <AccountNavLink className="text-[14px] text-foreground hover:text-link" />
+              </li>
             </ul>
           </div>
           <div>
