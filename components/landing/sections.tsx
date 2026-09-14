@@ -13,7 +13,7 @@ const steps = {
       photo: "/photos/reel.jpg",
       alt: "A man with a camera, ready to shoot product content",
       title: "Upload product as a reel",
-      description: "Drop in a short video. That is the product listing.",
+      description: "Navigate to the 'Grow Biz' page, Drop in a short video or banner or product.",
     },
     {
       photo: "/photos/rest.jpg",

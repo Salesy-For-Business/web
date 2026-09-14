@@ -151,7 +151,7 @@ export function OverviewPage() {
               </p>
             </div>
             <div
-              className="flex rounded-full border border-border p-1"
+              className="flex rounded-full border border-border p-1 w-fit"
               role="radiogroup"
               aria-label="Revenue period"
             >
