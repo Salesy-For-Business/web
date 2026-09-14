@@ -1,5 +1,5 @@
 import { CartView } from "@/components/storefront/cart-view";
 
-export default function DemoCartPage() {
+export default function StoreCartPage() {
   return <CartView />;
 }

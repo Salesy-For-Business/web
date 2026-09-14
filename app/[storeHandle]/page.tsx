@@ -4,7 +4,7 @@ import { ContactChannels } from "@/components/storefront/contact-channels";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { useStorefront } from "@/components/storefront/store-context";
 
-export default function DemoStorePage() {
+export default function StoreHomePage() {
   const store = useStorefront();
 
   return (
@@ -16,7 +16,7 @@ export default function DemoStorePage() {
             <img
               src={store.logoDataUrl}
               alt=""
-              className="size-16 rounded-2xl hidden object-cover shadow-sm sm:size-20"
+              className="size-16 rounded-2xl object-cover shadow-sm sm:size-20"
             />
           ) : null}
           <div>

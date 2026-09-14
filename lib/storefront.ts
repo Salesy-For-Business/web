@@ -159,12 +159,64 @@ export const DEMO_STORE: Storefront = {
 };
 
 /**
+ * App routes that must never be treated as store handles.
+ * Static `app/` folders already win in Next.js; this also guards lookups.
+ */
+export const RESERVED_STORE_HANDLES = new Set([
+  "api",
+  "dashboard",
+  "signin",
+  "signup",
+  "forgot-password",
+  "reset-password",
+  "blog",
+  "_next",
+  "favicon.ico",
+]);
+
+function cloneStore(
+  base: Storefront,
+  overrides: Pick<Storefront, "handle" | "businessName"> &
+    Partial<Omit<Storefront, "handle" | "businessName" | "products">>,
+): Storefront {
+  return {
+    ...base,
+    ...overrides,
+    contact: { ...base.contact, ...overrides.contact },
+    products: base.products,
+  };
+}
+
+/**
+ * Seeded storefronts until the API / DB exists.
+ * Add handles here to preview real URLs like /chidicrafts.
+ */
+const SEED_STORES: Record<string, Storefront> = {
+  demo: DEMO_STORE,
+  chidicrafts: cloneStore(DEMO_STORE, {
+    handle: "chidicrafts",
+    businessName: "Chidi Crafts",
+  }),
+};
+
+export function normalizeStoreHandle(raw: string) {
+  return raw.trim().toLowerCase();
+}
+
+export function isReservedStoreHandle(handle: string) {
+  return RESERVED_STORE_HANDLES.has(normalizeStoreHandle(handle));
+}
+
+/**
  * Resolve a storefront by handle.
- * Demo: only `"demo"` is available. Backend will load live stores by handle.
+ * Returns null when the store is missing or the segment is reserved —
+ * callers should `notFound()` and render the missing-storefront UI.
+ * Swap this for an API/DB lookup later without changing routes.
  */
 export function getStoreByHandle(handle: string): Storefront | null {
-  if (handle === DEMO_STORE.handle) return DEMO_STORE;
-  return null;
+  const key = normalizeStoreHandle(handle);
+  if (!key || isReservedStoreHandle(key)) return null;
+  return SEED_STORES[key] ?? null;
 }
 
 export function getProduct(store: Storefront, slug: string) {

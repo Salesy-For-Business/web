@@ -41,8 +41,8 @@ function ShareStoreButton({ handle }: { handle: string }) {
   const [copied, setCopied] = useState(false);
   const url =
     typeof window !== "undefined"
-      ? `${window.location.origin}/demo`
-      : "/demo";
+      ? `${window.location.origin}/${handle}`
+      : `/${handle}`;
 
   async function share() {
     try {

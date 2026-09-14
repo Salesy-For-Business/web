@@ -31,9 +31,7 @@ export function DashboardSidebar({
   const name = business?.businessName ?? "Your store";
   const plan = business?.plan ?? "free";
   const handle = business?.storeHandle ?? "mystore";
-  /** Demo storefront until live handles are wired. */
-  const storeUrl = "/demo";
-  // const storeUrl = `${window.location.origin}/${handle}`;
+  const storeUrl = `/${handle}`;
 
   function isActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard";

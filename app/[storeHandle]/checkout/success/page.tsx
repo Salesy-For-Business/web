@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { CheckoutSuccess } from "@/components/storefront/checkout-success";
 
-export default function DemoCheckoutSuccessPage() {
+export default function StoreCheckoutSuccessPage() {
   return (
     <Suspense
       fallback={

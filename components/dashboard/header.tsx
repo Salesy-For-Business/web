@@ -10,8 +10,8 @@ import { useAuthStore } from "@/lib/auth-store";
 export function DashboardHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
   const pathname = usePathname();
   const business = useAuthStore((s) => s.business);
-  /** Demo storefront until live handles are wired. */
-  const storeUrl = "/demo";
+  const handle = business?.storeHandle ?? "demo";
+  const storeUrl = `/${handle}`;
 
   const current =
     dashboardNav.find((item) =>

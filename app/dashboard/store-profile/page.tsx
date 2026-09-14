@@ -34,7 +34,7 @@ export default function StoreProfilePage() {
         actions={
           <>
             <Link
-              href="/demo"
+              href={`/${business.storeHandle}`}
               target="_blank"
               rel="noreferrer"
               className={clsx(secondaryButtonClass, "w-auto px-5")}
