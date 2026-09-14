@@ -55,6 +55,7 @@ export default function Faq() {
       id="faq"
       aria-labelledby="faq-heading"
       className="scroll-mt-24 bg-background px-6 py-24 sm:px-10 lg:px-16"
+      data-aos="fade-up"
     >
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-20">
         <div>

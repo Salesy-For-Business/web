@@ -19,7 +19,11 @@ export default function Help() {
   }
 
   return (
-    <section className="flex flex-col items-center px-6 py-24 text-center sm:px-10">
+    <section
+      className="flex flex-col items-center px-6 py-24 text-center sm:px-10"
+      data-aos="fade-up"
+      data-aos-delay="80"
+    >
       <h2 className="max-w-3xl text-5xl leading-14 tracking-[-0.5px] sm:text-[56px] sm:leading-16">
         What can we help you with?
       </h2>

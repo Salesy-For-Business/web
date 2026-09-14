@@ -71,6 +71,7 @@ export default function Pricing() {
       id="pricing"
       aria-labelledby="pricing-heading"
       className="scroll-mt-24 bg-surface-muted px-6 py-24 sm:px-10 lg:px-16"
+      data-aos="fade-up"
     >
       <div className="mx-auto max-w-3xl text-center">
         <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-muted">

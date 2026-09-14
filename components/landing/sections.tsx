@@ -81,6 +81,7 @@ export default function Sections() {
             id={option.id}
             aria-labelledby={`${option.id}-heading`}
             className="scroll-mt-24 bg-surface-muted px-6 py-20 sm:px-10 lg:px-16"
+            data-aos="fade-up"
           >
             <div className="mx-auto max-w-6xl">
               <h2
@@ -109,6 +110,8 @@ export default function Sections() {
                   <article
                     key={step.title}
                     className="flex flex-col overflow-hidden rounded-xl border border-border bg-background text-left"
+                    data-aos="fade-up"
+                    data-aos-delay={String(index * 60)}
                   >
                     <div className="relative aspect-4/3 w-full">
                       <Image

@@ -28,7 +28,7 @@ export default function Features() {
       aria-labelledby="features-heading"
       className="scroll-mt-24 bg-background px-6 py-24 sm:px-10 lg:px-16"
     >
-      <div className="mx-auto max-w-3xl text-center">
+      <div className="mx-auto max-w-3xl text-center" data-aos="fade-up">
         <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-muted">
           What you get
         </p>
@@ -49,6 +49,8 @@ export default function Features() {
           <article
             key={feature.title}
             className="rounded-xl border border-border bg-surface-muted p-8 text-left"
+            data-aos="fade-up"
+            data-aos-delay={String(index * 80)}
           >
             <span className="font-display text-sm text-muted">
               {String(index + 1).padStart(2, "0")}

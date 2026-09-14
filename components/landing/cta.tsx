@@ -4,6 +4,8 @@ export default function Cta() {
       id="cta"
       aria-labelledby="cta-heading"
       className="scroll-mt-24 bg-surface-muted px-6 py-24 sm:px-10 lg:px-16"
+      data-aos="zoom-in"
+      data-aos-duration="600"
     >
       <div className="mx-auto max-w-3xl text-center">
         <h2

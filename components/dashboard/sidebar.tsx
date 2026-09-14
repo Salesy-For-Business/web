@@ -8,6 +8,7 @@ import {
   X,
 } from "lucide-react";
 import clsx from "clsx";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   dashboardNav,
   storeInitial,
@@ -143,25 +144,35 @@ export function DashboardSidebar({
 
   return (
     <>
-      {/* Desktop */}
       <aside className="hidden w-64 shrink-0 border-r border-border bg-background lg:block">
         <div className="sticky top-0 h-dvh overflow-y-auto">{content}</div>
       </aside>
 
-      {/* Mobile drawer */}
-      {open ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button
-            type="button"
-            className="absolute inset-0 bg-heading/40"
-            aria-label="Close menu"
-            onClick={onClose}
-          />
-          <aside className="absolute inset-y-0 left-0 w-[min(20rem,88vw)] bg-background shadow-lg">
-            {content}
-          </aside>
-        </div>
-      ) : null}
+      <AnimatePresence>
+        {open ? (
+          <div className="fixed inset-0 z-50 lg:hidden" key="mobile-sidebar">
+            <motion.button
+              type="button"
+              className="absolute inset-0 bg-heading/40"
+              aria-label="Close menu"
+              onClick={onClose}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            />
+            <motion.aside
+              className="absolute inset-y-0 left-0 w-[min(20rem,88vw)] bg-background shadow-lg"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {content}
+            </motion.aside>
+          </div>
+        ) : null}
+      </AnimatePresence>
     </>
   );
 }

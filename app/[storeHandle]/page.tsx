@@ -2,6 +2,7 @@
 
 import { ContactChannels } from "@/components/storefront/contact-channels";
 import { ProductGrid } from "@/components/storefront/product-grid";
+import { STOREFRONT_BRAND_ID } from "@/components/storefront/shell";
 import { useStorefront } from "@/components/storefront/store-context";
 
 export default function StoreHomePage() {
@@ -9,7 +10,7 @@ export default function StoreHomePage() {
 
   return (
     <div className="space-y-12">
-      <section className="max-w-2xl">
+      <section id={STOREFRONT_BRAND_ID} className="max-w-2xl scroll-mt-24">
         <div className="flex items-center gap-4">
           {store.logoDataUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
