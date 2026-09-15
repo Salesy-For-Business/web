@@ -113,6 +113,13 @@ const ownerRoleSchema = z.enum(["Owner", "Manager", "Partner"]);
 export const businessSchema = z
   .object({
     businessName: z.string().trim().min(1, "Enter a business name"),
+    storeHandle: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .min(3, "Handle must be at least 3 characters")
+      .max(24, "Keep the handle under 24 characters")
+      .regex(/^[a-z0-9]+$/, "Use only lowercase letters and numbers"),
     usePersonalEmail: z.boolean(),
     businessEmail: z.string().trim().optional(),
     usePersonalPhone: z.boolean(),

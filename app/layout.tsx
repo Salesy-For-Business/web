@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Google_Sans, Google_Sans_Flex, Roboto_Mono } from "next/font/google";
+import { AuthSessionSync } from "@/components/auth/auth-session-sync";
 import { InlineScript } from "@/components/inline-script";
+import { AppToaster } from "@/components/providers/app-toaster";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -44,7 +47,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <InlineScript html={THEME_INIT_SCRIPT} />
       </head>
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
-        {children}
+        <QueryProvider>
+          <AuthSessionSync />
+          <AppToaster />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

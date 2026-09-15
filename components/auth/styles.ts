@@ -8,7 +8,7 @@ export const fieldHintClass = "mt-1.5 text-[13px] text-muted";
 export const fieldErrorClass = "mt-1.5 text-[13px] text-red-600 dark:text-red-500";
 
 export const inputClass = clsx(
-  "h-12 w-full rounded-lg border border-border bg-background px-4 text-[15px] text-foreground",
+  "h-12 w-full rounded-lg border border-border bg-background px-4 text-[16px] text-foreground",
   "placeholder:text-muted",
   "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30",
   "disabled:cursor-not-allowed disabled:opacity-60",
@@ -16,7 +16,7 @@ export const inputClass = clsx(
 );
 
 export const textareaClass = clsx(
-  "min-h-28 w-full rounded-lg border border-border bg-background px-4 py-3 text-[15px] text-foreground",
+  "min-h-28 w-full rounded-lg border border-border bg-background px-4 py-3 text-[16px] text-foreground",
   "placeholder:text-muted",
   "focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30",
   "disabled:cursor-not-allowed disabled:opacity-60",

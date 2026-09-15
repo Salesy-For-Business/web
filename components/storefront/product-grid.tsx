@@ -12,6 +12,26 @@ export function ProductImage({
   product: StoreProduct;
   className?: string;
 }) {
+  const image = product.images?.[0];
+
+  if (image) {
+    return (
+      <div
+        className={clsx(
+          "relative aspect-[4/5] overflow-hidden rounded-xl bg-surface",
+          className,
+        )}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={image}
+          alt={product.name}
+          className="absolute inset-0 size-full object-cover"
+        />
+      </div>
+    );
+  }
+
   return (
     <div
       className={clsx(

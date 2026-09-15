@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthSession } from "@/lib/auth/queries";
 import { useAuthStore, type AuthStatus } from "@/lib/auth-store";
 
 type AuthGateProps = {
@@ -25,51 +26,32 @@ function destinationFor(status: AuthStatus, hasBusiness: boolean): string {
 
 export function AuthGate({ children, allow, require }: AuthGateProps) {
   const router = useRouter();
-  const hydrated = useAuthStore((s) => s.hydrated);
-  const status = useAuthStore((s) => s.status);
-  const user = useAuthStore((s) => s.user);
-  const business = useAuthStore((s) => s.business);
+  const { data, isPending, isFetched, isError } = useAuthSession();
+  const storeUser = useAuthStore((s) => s.user);
+  const storeBusiness = useAuthStore((s) => s.business);
+  const storeStatus = useAuthStore((s) => s.status);
   const otpPurpose = useAuthStore((s) => s.otpPurpose);
   const resetEmail = useAuthStore((s) => s.resetEmail);
   const resetReady = useAuthStore((s) => s.resetReady);
 
-  useEffect(() => {
-    if (!hydrated) {
-      const t = window.setTimeout(() => {
-        if (!useAuthStore.getState().hydrated) {
-          useAuthStore.getState().setHydrated(true);
-        }
-      }, 50);
-      return () => window.clearTimeout(t);
-    }
-  }, [hydrated]);
+  const ready = isFetched || isError || !isPending;
+  const status = data?.status ?? (isError ? "anonymous" : storeStatus);
+  const user = data?.user ?? storeUser;
+  const business = data?.business ?? storeBusiness;
+  const effectiveOtpPurpose =
+    status === "pendingVerify" ? "signup" : otpPurpose;
 
   useEffect(() => {
-    if (!hydrated) {
-      const t = window.setTimeout(() => {
-        if (!useAuthStore.getState().hydrated) {
-          useAuthStore.getState().setHydrated(true);
-        }
-      }, 50);
-      return () => window.clearTimeout(t);
-    }
-  }, [hydrated]);
+    if (!ready) return;
 
-  useEffect(() => {
-    if (!hydrated) return;
-
-    // Reset OTP verify: anonymous + otpPurpose reset, OR already verified (resetReady)
     if (require?.otpPurpose === "reset") {
-      if (resetReady && resetEmail) {
-        return;
-      }
-      if (otpPurpose !== "reset" || !resetEmail) {
+      if (resetReady && resetEmail) return;
+      if (effectiveOtpPurpose !== "reset" || !resetEmail) {
         router.replace("/forgot-password");
       }
       return;
     }
 
-    // Reset password form after OTP
     if (require?.resetReady) {
       if (!resetReady || !resetEmail) {
         router.replace("/forgot-password");
@@ -87,7 +69,7 @@ export function AuthGate({ children, allow, require }: AuthGateProps) {
       return;
     }
 
-    if (require?.otpPurpose === "signup" && otpPurpose !== "signup") {
+    if (require?.otpPurpose === "signup" && effectiveOtpPurpose !== "signup") {
       if (status === "pendingBusiness") {
         router.replace("/signup/business");
       } else if (!user) {
@@ -97,11 +79,11 @@ export function AuthGate({ children, allow, require }: AuthGateProps) {
       }
     }
   }, [
-    hydrated,
+    ready,
     status,
     user,
     business,
-    otpPurpose,
+    effectiveOtpPurpose,
     resetEmail,
     resetReady,
     allow,
@@ -109,7 +91,7 @@ export function AuthGate({ children, allow, require }: AuthGateProps) {
     router,
   ]);
 
-  if (!hydrated) {
+  if (!ready) {
     return (
       <div className="flex flex-1 items-center justify-center py-24 text-[14px] text-muted">
         Loading…
@@ -119,7 +101,7 @@ export function AuthGate({ children, allow, require }: AuthGateProps) {
 
   if (require?.otpPurpose === "reset") {
     if (resetReady && resetEmail) return <>{children}</>;
-    if (otpPurpose !== "reset" || !resetEmail) return null;
+    if (effectiveOtpPurpose !== "reset" || !resetEmail) return null;
     return <>{children}</>;
   }
 
@@ -130,7 +112,10 @@ export function AuthGate({ children, allow, require }: AuthGateProps) {
 
   if (allow !== "any" && !allow.includes(status)) return null;
   if (require?.hasUser && !user) return null;
-  if (require?.otpPurpose === "signup" && otpPurpose !== "signup") return null;
+  if (require?.otpPurpose === "signup" && effectiveOtpPurpose !== "signup") {
+    if (status === "pendingVerify") return <>{children}</>;
+    return null;
+  }
 
   return <>{children}</>;
 }

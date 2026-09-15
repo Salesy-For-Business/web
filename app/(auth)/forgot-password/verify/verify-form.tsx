@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { AuthGate, AuthShell, OtpInput, SubmitButton } from "@/components/auth";
+import { getApiError, useVerifyOtpMutation } from "@/lib/auth/queries";
 import { otpSchema, type OtpValues } from "@/lib/auth-schemas";
-import { delayMs, useAuthStore } from "@/lib/auth-store";
-import { fieldErrorClass } from "@/components/auth/styles";
+import { useAuthStore } from "@/lib/auth-store";
 
 function ResetVerifyForm() {
   const router = useRouter();
   const resetEmail = useAuthStore((s) => s.resetEmail);
-  const verifyOtp = useAuthStore((s) => s.verifyOtp);
-  const [formError, setFormError] = useState<string | null>(null);
+  const markResetVerified = useAuthStore((s) => s.markResetVerified);
+  const verifyOtp = useVerifyOtpMutation();
 
   const {
     control,
@@ -25,15 +25,17 @@ function ResetVerifyForm() {
     defaultValues: { code: "" },
   });
 
+  const loading = isSubmitting || verifyOtp.isPending;
+
   async function onSubmit(values: OtpValues) {
-    setFormError(null);
-    await delayMs();
-    const result = verifyOtp(values.code);
-    if (!result.ok) {
-      setFormError(result.error);
-      return;
+    try {
+      await verifyOtp.mutateAsync({ code: values.code, purpose: "reset" });
+      markResetVerified();
+      toast.success("Code verified. Set a new password.");
+      router.replace("/reset-password");
+    } catch (err) {
+      toast.error(getApiError(err, "Invalid or expired code."));
     }
-    router.replace("/reset-password");
   }
 
   return (
@@ -62,12 +64,7 @@ function ResetVerifyForm() {
             />
           )}
         />
-        {formError ? (
-          <p className={fieldErrorClass} role="alert">
-            {formError}
-          </p>
-        ) : null}
-        <SubmitButton loading={isSubmitting}>Continue</SubmitButton>
+        <SubmitButton loading={loading}>Continue</SubmitButton>
       </form>
     </AuthShell>
   );

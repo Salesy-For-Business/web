@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import {
   AuthDivider,
   AuthGate,
@@ -14,15 +15,14 @@ import {
   SubmitButton,
   TextField,
 } from "@/components/auth";
+import { getApiError, useSignInMutation } from "@/lib/auth/queries";
 import { signInSchema, type SignInValues } from "@/lib/auth-schemas";
 import { delayMs, useAuthStore } from "@/lib/auth-store";
-import { fieldErrorClass } from "@/components/auth/styles";
 
 function SignInForm() {
   const router = useRouter();
-  const signIn = useAuthStore((s) => s.signIn);
+  const signIn = useSignInMutation();
   const signInGoogle = useAuthStore((s) => s.signInGoogle);
-  const [formError, setFormError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const {
@@ -34,6 +34,8 @@ function SignInForm() {
     defaultValues: { email: "", password: "" },
   });
 
+  const loading = isSubmitting || signIn.isPending;
+
   function routeFor(next: string) {
     if (next === "pendingVerify") router.push("/signup/verify");
     else if (next === "pendingBusiness") router.push("/signup/business");
@@ -41,22 +43,21 @@ function SignInForm() {
   }
 
   async function onSubmit(values: SignInValues) {
-    setFormError(null);
-    await delayMs();
-    const result = signIn(values.email, values.password);
-    if (!result.ok) {
-      setFormError(result.error);
-      return;
+    try {
+      const data = await signIn.mutateAsync(values);
+      toast.success("Signed in");
+      routeFor(data.next);
+    } catch (err) {
+      toast.error(getApiError(err, "Could not sign in."));
     }
-    routeFor(result.next);
   }
 
   async function onGoogle() {
-    setFormError(null);
     setGoogleLoading(true);
     await delayMs();
     const result = signInGoogle();
     setGoogleLoading(false);
+    toast.success("Signed in");
     routeFor(result.next);
   }
 
@@ -76,7 +77,7 @@ function SignInForm() {
       <GoogleButton
         label="Continue with Google"
         loading={googleLoading}
-        disabled={isSubmitting}
+        disabled={loading}
         onClick={() => void onGoogle()}
       />
       <AuthDivider />
@@ -102,12 +103,7 @@ function SignInForm() {
             Forgot password?
           </Link>
         </div>
-        {formError ? (
-          <p className={fieldErrorClass} role="alert">
-            {formError}
-          </p>
-        ) : null}
-        <SubmitButton loading={isSubmitting}>Sign in</SubmitButton>
+        <SubmitButton loading={loading}>Sign in</SubmitButton>
       </form>
     </AuthShell>
   );

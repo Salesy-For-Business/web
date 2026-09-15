@@ -1,22 +1,25 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { AuthGate, AuthShell, SubmitButton, TextField } from "@/components/auth";
+import {
+  getApiError,
+  useForgotPasswordMutation,
+} from "@/lib/auth/queries";
 import {
   forgotPasswordSchema,
   type ForgotPasswordValues,
 } from "@/lib/auth-schemas";
-import { delayMs, useAuthStore } from "@/lib/auth-store";
-import { fieldErrorClass } from "@/components/auth/styles";
+import { useAuthStore } from "@/lib/auth-store";
 
 function ForgotForm() {
   const router = useRouter();
-  const requestReset = useAuthStore((s) => s.requestReset);
-  const [formError, setFormError] = useState<string | null>(null);
+  const forgot = useForgotPasswordMutation();
+  const beginPasswordReset = useAuthStore((s) => s.beginPasswordReset);
 
   const {
     register,
@@ -27,15 +30,17 @@ function ForgotForm() {
     defaultValues: { email: "" },
   });
 
+  const loading = isSubmitting || forgot.isPending;
+
   async function onSubmit(values: ForgotPasswordValues) {
-    setFormError(null);
-    await delayMs();
-    const result = requestReset(values.email);
-    if (!result.ok) {
-      setFormError(result.error);
-      return;
+    try {
+      const data = await forgot.mutateAsync(values.email);
+      beginPasswordReset(values.email);
+      toast.success(data.message ?? "Check your email for a reset code.");
+      router.push("/forgot-password/verify");
+    } catch (err) {
+      toast.error(getApiError(err, "Could not send reset code."));
     }
-    router.push("/forgot-password/verify");
   }
 
   return (
@@ -56,12 +61,7 @@ function ForgotForm() {
           error={errors.email?.message}
           {...register("email")}
         />
-        {formError ? (
-          <p className={fieldErrorClass} role="alert">
-            {formError}
-          </p>
-        ) : null}
-        <SubmitButton loading={isSubmitting}>Send code</SubmitButton>
+        <SubmitButton loading={loading}>Send code</SubmitButton>
       </form>
     </AuthShell>
   );

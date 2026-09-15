@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
+import { toast } from "sonner";
 import {
   fieldErrorClass,
   fieldHintClass,
@@ -14,8 +15,8 @@ import {
   textareaClass,
 } from "@/components/auth/styles";
 import { useStorefront } from "@/components/storefront/store-context";
-import { delayMs } from "@/lib/auth-store";
 import { useCartStore } from "@/lib/cart-store";
+import { api, getApiError, type ApiOk } from "@/lib/api/client";
 import { formatNaira, storePath } from "@/lib/storefront";
 
 type PayMethod = "card" | "transfer" | "ussd";
@@ -31,7 +32,6 @@ export function CheckoutForm() {
   const router = useRouter();
   const hydrated = useCartStore((s) => s.hydrated);
   const lines = useCartStore((s) => s.lines);
-  const clear = useCartStore((s) => s.clear);
   const subtotal = lines.reduce((sum, l) => sum + l.price * l.qty, 0);
 
   const [name, setName] = useState("");
@@ -62,19 +62,42 @@ export function CheckoutForm() {
       setError("Enter a valid phone number.");
       return;
     }
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      setError("Enter a valid email for payment receipts.");
+      return;
+    }
     if (!address.trim()) {
       setError("Enter a delivery address or pickup note.");
       return;
     }
 
     setLoading(true);
-    await delayMs(900);
-    const orderId = `ORD-${Math.floor(1000 + Math.random() * 9000)}`;
-    clear();
-    setLoading(false);
-    router.push(
-      `${storePath(store.handle, "/checkout/success")}?order=${orderId}&pay=${method}`,
-    );
+    try {
+      const { data } = await api.post<
+        ApiOk<{ authorizationUrl: string; reference: string }>
+      >("/checkout/initialize", {
+        storeHandle: store.handle,
+        method,
+        customer: {
+          name: name.trim(),
+          email: email.trim(),
+          phone: phone.trim(),
+        },
+        address: address.trim(),
+        notes: notes.trim() || undefined,
+        items: lines.map((l) => ({
+          productId: l.productId,
+          qty: l.qty,
+        })),
+      });
+
+      window.location.href = data.authorizationUrl;
+    } catch (err) {
+      const message = getApiError(err, "Could not start payment.");
+      setError(message);
+      toast.error(message);
+      setLoading(false);
+    }
   }
 
   if (!hydrated || lines.length === 0) {
@@ -134,7 +157,7 @@ export function CheckoutForm() {
             </div>
             <div>
               <label htmlFor="buyer-email" className={fieldLabelClass}>
-                Email <span className="font-normal text-muted">(optional)</span>
+                Email
               </label>
               <input
                 id="buyer-email"
@@ -206,7 +229,7 @@ export function CheckoutForm() {
             ))}
           </div>
           <p className={fieldHintClass}>
-            Demo checkout — payment is simulated. No real charge.
+            You’ll complete payment securely on the next screen.
           </p>
         </fieldset>
 
@@ -222,7 +245,7 @@ export function CheckoutForm() {
             disabled={loading}
             className={clsx(primaryButtonClass, "w-auto min-w-48 px-6")}
           >
-            {loading ? "Processing…" : `Pay ${formatNaira(subtotal)}`}
+            {loading ? "Redirecting…" : `Pay ${formatNaira(subtotal)}`}
           </button>
           <Link
             href={storePath(store.handle, "/cart")}

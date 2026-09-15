@@ -1,20 +1,19 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { AuthGate, AuthShell, OtpInput, SubmitButton } from "@/components/auth";
+import { getApiError, useVerifyOtpMutation } from "@/lib/auth/queries";
 import { otpSchema, type OtpValues } from "@/lib/auth-schemas";
-import { delayMs, useAuthStore } from "@/lib/auth-store";
-import { fieldErrorClass } from "@/components/auth/styles";
+import { useAuthStore } from "@/lib/auth-store";
 
 function VerifyForm() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const verifyOtp = useAuthStore((s) => s.verifyOtp);
-  const [formError, setFormError] = useState<string | null>(null);
+  const verifyOtp = useVerifyOtpMutation();
 
   const {
     control,
@@ -25,15 +24,16 @@ function VerifyForm() {
     defaultValues: { code: "" },
   });
 
+  const loading = isSubmitting || verifyOtp.isPending;
+
   async function onSubmit(values: OtpValues) {
-    setFormError(null);
-    await delayMs();
-    const result = verifyOtp(values.code);
-    if (!result.ok) {
-      setFormError(result.error);
-      return;
+    try {
+      await verifyOtp.mutateAsync({ code: values.code, purpose: "signup" });
+      toast.success("Email verified");
+      router.push("/signup/business");
+    } catch (err) {
+      toast.error(getApiError(err, "Invalid or expired code."));
     }
-    router.push("/signup/business");
   }
 
   return (
@@ -59,12 +59,7 @@ function VerifyForm() {
             />
           )}
         />
-        {formError ? (
-          <p className={fieldErrorClass} role="alert">
-            {formError}
-          </p>
-        ) : null}
-        <SubmitButton loading={isSubmitting}>Verify email</SubmitButton>
+        <SubmitButton loading={loading}>Verify email</SubmitButton>
       </form>
     </AuthShell>
   );

@@ -9,10 +9,12 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
+import { toast } from "sonner";
 import {
   dashboardNav,
   storeInitial,
 } from "@/lib/dashboard";
+import { useSignOutMutation } from "@/lib/auth/queries";
 import {
   planLabel,
   useAuthStore,
@@ -27,7 +29,8 @@ export function DashboardSidebar({
 }) {
   const pathname = usePathname();
   const business = useAuthStore((s) => s.business);
-  const signOut = useAuthStore((s) => s.signOut);
+  const clearLocal = useAuthStore((s) => s.signOut);
+  const signOutMutation = useSignOutMutation();
 
   const name = business?.businessName ?? "Your store";
   const plan = business?.plan ?? "free";
@@ -100,8 +103,16 @@ export function DashboardSidebar({
           type="button"
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-[14px] font-medium text-heading hover:bg-surface"
           onClick={() => {
-            signOut();
-            window.location.href = "/signin";
+            void (async () => {
+              try {
+                await signOutMutation.mutateAsync();
+                toast.success("Signed out");
+              } catch {
+                toast.error("Signed out locally. Session may still be open.");
+              }
+              clearLocal();
+              window.location.href = "/signin";
+            })();
           }}
         >
           <LogOut className="size-4 shrink-0" aria-hidden />

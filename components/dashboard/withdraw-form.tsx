@@ -14,7 +14,6 @@ import {
 } from "@/components/auth/styles";
 import { PayoutPinSetup } from "@/components/dashboard/payout-pin";
 import { formatNaira } from "@/lib/dashboard";
-import { demoAvailableBalance } from "@/lib/dashboard-demo";
 import type { Bank } from "@/lib/banks";
 import {
   delayMs,
@@ -29,7 +28,11 @@ type ResolveState =
   | { status: "resolved"; accountName: string }
   | { status: "error"; message: string };
 
-export function WithdrawForm() {
+export function WithdrawForm({
+  availableBalance = 0,
+}: {
+  availableBalance?: number;
+}) {
   const payoutPin = useAuthStore((s) => s.payoutPin);
   const verifyPayoutPin = useAuthStore((s) => s.verifyPayoutPin);
 
@@ -137,8 +140,8 @@ export function WithdrawForm() {
       setError("Enter an amount to withdraw.");
       return;
     }
-    if (value > demoAvailableBalance) {
-      setError(`You can withdraw up to ${formatNaira(demoAvailableBalance)}.`);
+    if (value > availableBalance) {
+      setError(`You can withdraw up to ${formatNaira(availableBalance)}.`);
       return;
     }
     if (!bankCode || !selectedBank) {

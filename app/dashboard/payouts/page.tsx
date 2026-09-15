@@ -4,13 +4,15 @@ import { Wallet } from "lucide-react";
 import { DashboardPageHeader } from "@/components/dashboard/page-chrome";
 import { WithdrawForm } from "@/components/dashboard/withdraw-form";
 import { formatNaira } from "@/lib/dashboard";
-import { demoAvailableBalance } from "@/lib/dashboard-demo";
+import { useDashboardOverview } from "@/lib/dashboard/queries";
 import { planLabel, salesyFeeRate, useAuthStore } from "@/lib/auth-store";
 
 export default function PayoutsPage() {
   const business = useAuthStore((s) => s.business);
   const plan = business?.plan ?? "free";
   const rate = salesyFeeRate(plan);
+  const { data, isPending } = useDashboardOverview("all");
+  const available = data?.availableBalance ?? 0;
 
   return (
     <div>
@@ -28,7 +30,7 @@ export default function PayoutsPage() {
             Available to withdraw
           </p>
           <p className="mt-2 font-[system-ui] text-[36px] text-heading">
-            {formatNaira(demoAvailableBalance)}
+            {isPending ? "…" : formatNaira(available)}
           </p>
           <p className="mt-3 text-[13px] leading-5 text-muted">
             Plan: {planLabel(plan)}.{" "}
@@ -45,7 +47,7 @@ export default function PayoutsPage() {
         </section>
 
         <div className="lg:col-span-3">
-          <WithdrawForm />
+          <WithdrawForm availableBalance={available} />
         </div>
       </div>
     </div>

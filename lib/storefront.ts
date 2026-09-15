@@ -18,6 +18,8 @@ export type StoreProduct = {
   accent: string;
   category: string;
   inStock: boolean;
+  /** Cloudinary (or other CDN) image URLs */
+  images?: string[];
   /** Short tags shown on detail */
   tags?: string[];
 };
@@ -208,10 +210,8 @@ export function isReservedStoreHandle(handle: string) {
 }
 
 /**
- * Resolve a storefront by handle.
- * Returns null when the store is missing or the segment is reserved —
- * callers should `notFound()` and render the missing-storefront UI.
- * Swap this for an API/DB lookup later without changing routes.
+ * Resolve a storefront by handle from seed data only.
+ * Prefer `resolveStorefront` from `@/lib/storefront-db` in server layouts.
  */
 export function getStoreByHandle(handle: string): Storefront | null {
   const key = normalizeStoreHandle(handle);

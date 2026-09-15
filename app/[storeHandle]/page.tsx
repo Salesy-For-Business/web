@@ -41,7 +41,13 @@ export default function StoreHomePage() {
             {store.products.length} products
           </p>
         </div>
-        <ProductGrid products={store.products} />
+        {store.products.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border px-6 py-12 text-center text-[14px] text-muted">
+            This store hasn’t listed products yet. Check back soon.
+          </p>
+        ) : (
+          <ProductGrid products={store.products} />
+        )}
       </section>
 
       <ContactChannels />

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import clsx from "clsx";
+import { toast } from "sonner";
 import { DashboardPageHeader } from "@/components/dashboard/page-chrome";
 import { LiveChatSettings } from "@/components/dashboard/live-chat-settings";
 import {
@@ -10,13 +11,15 @@ import {
 } from "@/components/dashboard/payout-pin";
 import { secondaryButtonClass } from "@/components/auth/styles";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useSignOutMutation } from "@/lib/auth/queries";
 import { planLabel, useAuthStore } from "@/lib/auth-store";
 
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
   const business = useAuthStore((s) => s.business);
   const payoutPin = useAuthStore((s) => s.payoutPin);
-  const signOut = useAuthStore((s) => s.signOut);
+  const clearLocal = useAuthStore((s) => s.signOut);
+  const signOutMutation = useSignOutMutation();
 
   return (
     <div>
@@ -92,8 +95,16 @@ export default function SettingsPage() {
             type="button"
             className="mt-4 text-[14px] font-medium text-red-600 hover:text-red-700"
             onClick={() => {
-              signOut();
-              window.location.href = "/signin";
+              void (async () => {
+                try {
+                  await signOutMutation.mutateAsync();
+                  toast.success("Signed out");
+                } catch {
+                  toast.error("Signed out locally. Session may still be open.");
+                }
+                clearLocal();
+                window.location.href = "/signin";
+              })();
             }}
           >
             Sign out

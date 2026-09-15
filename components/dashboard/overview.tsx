@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { Plus, Share2, Wallet } from "lucide-react";
@@ -8,22 +8,11 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/auth/styles";
+import { formatNaira, greetingForHour } from "@/lib/dashboard";
 import {
-  formatNaira,
-  greetingForHour,
-} from "@/lib/dashboard";
-import {
-  acquisitionChannels,
-  demoAvailableBalance,
-  demoProductCount,
-  demoUniqueBuyers,
-  earningsBreakdown,
-  getPeriodMetrics,
-  recentTransactions,
-  revenueTrajectory,
-  topProducts,
+  useDashboardOverview,
   type RevenuePeriod,
-} from "@/lib/dashboard-demo";
+} from "@/lib/dashboard/queries";
 import {
   planLabel,
   productListingLimit,
@@ -55,7 +44,7 @@ function ShareStoreButton({ handle }: { handle: string }) {
         return;
       }
     } catch {
-      /* fall through to clipboard */
+      /* fall through */
     }
     await navigator.clipboard.writeText(url);
     setCopied(true);
@@ -74,7 +63,11 @@ function ShareStoreButton({ handle }: { handle: string }) {
   );
 }
 
-function RevenueBars({ points }: { points: typeof revenueTrajectory }) {
+function RevenueBars({
+  points,
+}: {
+  points: { label: string; revenue: number }[];
+}) {
   const max = Math.max(...points.map((p) => p.revenue), 1);
   return (
     <div className="flex h-44 items-end gap-3 sm:gap-4">
@@ -97,24 +90,74 @@ function RevenueBars({ points }: { points: typeof revenueTrajectory }) {
   );
 }
 
+function formatOrderDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString("en-NG", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return iso;
+  }
+}
+
 export function OverviewPage() {
   const user = useAuthStore((s) => s.user);
   const business = useAuthStore((s) => s.business);
   const [period, setPeriod] = useState<RevenuePeriod>("30d");
+  const { data, isPending } = useDashboardOverview(period);
 
   const plan = business?.plan ?? "free";
   const handle = business?.storeHandle ?? "mystore";
-  const metrics = getPeriodMetrics(period);
-  const earnings = earningsBreakdown(metrics.revenue, plan);
   const listingLimit = productListingLimit(plan);
+  const productCount = data?.productCount ?? 0;
   const listingLabel =
     listingLimit === Infinity
-      ? `${demoProductCount} / Unlimited`
-      : `${demoProductCount} / ${listingLimit}`;
+      ? `${productCount} / Unlimited`
+      : `${productCount} / ${listingLimit}`;
   const listingPct =
     listingLimit === Infinity
-      ? 12
-      : Math.min(100, Math.round((demoProductCount / listingLimit) * 100));
+      ? Math.min(100, productCount * 4)
+      : Math.min(100, Math.round((productCount / listingLimit) * 100));
+
+  const metrics = data?.metrics ?? {
+    revenue: 0,
+    totalOrders: 0,
+    paidOrders: 0,
+    avgOrderValue: 0,
+    storeViews: 0,
+    storeViewsConv: 0,
+  };
+  const earnings = data?.earnings ?? {
+    gross: 0,
+    platformFee: 0,
+    net: 0,
+    feeRate: 0,
+  };
+  const trajectory = data?.revenueTrajectory ?? [];
+  const topProducts = data?.topProducts ?? [];
+  const recentOrders = data?.recentOrders ?? [];
+
+  const channelBreakdown = useMemo(() => {
+    const paid = recentOrders.filter((o) => o.status === "Paid");
+    const counts = { card: 0, transfer: 0, ussd: 0 };
+    for (const o of paid) {
+      if (o.channel in counts) {
+        counts[o.channel as keyof typeof counts] += 1;
+      }
+    }
+    const total = paid.length || 1;
+    return [
+      { channel: "Card", orders: counts.card, share: Math.round((counts.card / total) * 100) },
+      {
+        channel: "Bank transfer",
+        orders: counts.transfer,
+        share: Math.round((counts.transfer / total) * 100),
+      },
+      { channel: "USSD", orders: counts.ussd, share: Math.round((counts.ussd / total) * 100) },
+    ];
+  }, [recentOrders]);
 
   return (
     <div className="space-y-8">
@@ -130,7 +173,7 @@ export function OverviewPage() {
         <div className="flex flex-wrap gap-2">
           <ShareStoreButton handle={handle} />
           <Link
-            href="/dashboard/products"
+            href="/dashboard/products/new"
             className={clsx(primaryButtonClass, "w-auto gap-2 px-5")}
           >
             <Plus className="size-4" aria-hidden />
@@ -138,6 +181,10 @@ export function OverviewPage() {
           </Link>
         </div>
       </div>
+
+      {isPending ? (
+        <p className="text-[14px] text-muted">Loading your store metrics…</p>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-5">
         <section className="rounded-xl border border-border bg-background p-6 lg:col-span-3">
@@ -151,7 +198,7 @@ export function OverviewPage() {
               </p>
             </div>
             <div
-              className="flex rounded-full border border-border p-1 w-fit"
+              className="flex w-fit rounded-full border border-border p-1"
               role="radiogroup"
               aria-label="Revenue period"
             >
@@ -186,8 +233,8 @@ export function OverviewPage() {
                 value: formatNaira(metrics.avgOrderValue),
               },
               {
-                label: "Store views conv.",
-                value: `${metrics.storeViewsConv.toFixed(1)}%`,
+                label: "Unique buyers",
+                value: String(data?.uniqueBuyers ?? 0),
               },
             ].map((stat) => (
               <div key={stat.label}>
@@ -218,9 +265,9 @@ export function OverviewPage() {
           </div>
           <div className="mt-6 flex items-center justify-between border-t border-border pt-5">
             <div>
-              <p className="text-[13px] text-muted">Unique buyers</p>
-              <p className="mt-1 text-[22px] font-medium text-heading">
-                {demoUniqueBuyers}
+              <p className="text-[13px] text-muted">Live store</p>
+              <p className="mt-1 text-[14px] font-medium text-heading">
+                /{handle}
               </p>
             </div>
             <p className="rounded-md bg-surface px-2.5 py-1 text-[12px] font-medium uppercase tracking-wide text-muted">
@@ -228,10 +275,7 @@ export function OverviewPage() {
             </p>
           </div>
           {plan === "free" ? (
-            <Link
-              href="/#pricing"
-              className={clsx(primaryButtonClass, "mt-6")}
-            >
+            <Link href="/#pricing" className={clsx(primaryButtonClass, "mt-6")}>
               Upgrade to Boutique
             </Link>
           ) : (
@@ -265,10 +309,10 @@ export function OverviewPage() {
               Credited to you
             </p>
             <p className="mt-2 font-[system-ui] text-[28px] text-heading">
-              {formatNaira(earnings.credited)}
+              {formatNaira(earnings.net)}
             </p>
             <p className="mt-2 text-[13px] text-muted">
-              Available now: {formatNaira(demoAvailableBalance)}
+              Available now: {formatNaira(data?.availableBalance ?? 0)}
             </p>
           </div>
           <div className="rounded-lg border border-border bg-surface p-5">
@@ -276,7 +320,7 @@ export function OverviewPage() {
               Salesy fee taken
             </p>
             <p className="mt-2 font-[system-ui] text-[28px] text-heading">
-              {formatNaira(earnings.fee)}
+              {formatNaira(earnings.platformFee)}
             </p>
             <p className="mt-2 text-[13px] text-muted">
               {plan === "free"
@@ -303,32 +347,46 @@ export function OverviewPage() {
             Gross volume over the last 6 months.
           </p>
           <div className="mt-6">
-            <RevenueBars points={revenueTrajectory} />
+            {trajectory.every((p) => p.revenue === 0) ? (
+              <p className="py-10 text-center text-[14px] text-muted">
+                No paid orders yet. Share your store to get your first sale.
+              </p>
+            ) : (
+              <RevenueBars points={trajectory} />
+            )}
           </div>
         </section>
 
         <section className="rounded-xl border border-border bg-background p-6">
-          <h2 className="text-[20px] leading-7">Acquisition channels</h2>
+          <h2 className="text-[20px] leading-7">Payment methods</h2>
           <p className="mt-1 text-[14px] text-muted">
-            Where paying customers came from this month.
+            How recent paid customers checked out.
           </p>
           <ul className="mt-6 space-y-4">
-            {acquisitionChannels.map((channel) => (
-              <li key={channel.channel}>
-                <div className="flex items-center justify-between text-[14px]">
-                  <span className="font-medium text-heading">{channel.channel}</span>
-                  <span className="text-muted">
-                    {channel.orders} orders · {channel.share}%
-                  </span>
-                </div>
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
-                  <div
-                    className="h-full rounded-full bg-primary/70"
-                    style={{ width: `${channel.share}%` }}
-                  />
-                </div>
+            {channelBreakdown.every((c) => c.orders === 0) ? (
+              <li className="py-6 text-center text-[14px] text-muted">
+                Channels will appear after your first paid order.
               </li>
-            ))}
+            ) : (
+              channelBreakdown.map((channel) => (
+                <li key={channel.channel}>
+                  <div className="flex items-center justify-between text-[14px]">
+                    <span className="font-medium text-heading">
+                      {channel.channel}
+                    </span>
+                    <span className="text-muted">
+                      {channel.orders} orders · {channel.share}%
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-surface-muted">
+                    <div
+                      className="h-full rounded-full bg-primary/70"
+                      style={{ width: `${channel.share}%` }}
+                    />
+                  </div>
+                </li>
+              ))
+            )}
           </ul>
         </section>
       </div>
@@ -344,24 +402,32 @@ export function OverviewPage() {
               View all
             </Link>
           </div>
-          <ul className="mt-5 divide-y divide-border">
-            {topProducts.map((product) => (
-              <li
-                key={product.name}
-                className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-[14px] font-medium text-heading">
-                    {product.name}
+          {topProducts.length === 0 ? (
+            <p className="mt-8 text-center text-[14px] text-muted">
+              No sales yet. Add products and share your store.
+            </p>
+          ) : (
+            <ul className="mt-5 divide-y divide-border">
+              {topProducts.map((product) => (
+                <li
+                  key={product.name}
+                  className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-[14px] font-medium text-heading">
+                      {product.name}
+                    </p>
+                    <p className="text-[13px] text-muted">
+                      {product.units} units
+                    </p>
+                  </div>
+                  <p className="shrink-0 font-[system-ui] text-[14px] font-medium text-heading">
+                    {formatNaira(product.revenue)}
                   </p>
-                  <p className="text-[13px] text-muted">{product.units} units</p>
-                </div>
-                <p className="shrink-0 font-[system-ui] text-[14px] font-medium text-heading">
-                  {formatNaira(product.revenue)}
-                </p>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         <section className="rounded-xl border border-border bg-background p-6">
@@ -374,39 +440,49 @@ export function OverviewPage() {
               Orders terminal
             </Link>
           </div>
-          <ul className="mt-5 divide-y divide-border">
-            {recentTransactions.map((tx) => (
-              <li
-                key={tx.id}
-                className="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-[14px] font-medium text-heading">
-                    {tx.customer}
-                  </p>
-                  <p className="truncate text-[13px] text-muted">
-                    {tx.product} · {tx.id}
-                  </p>
-                  <p className="mt-0.5 text-[12px] text-muted">{tx.date}</p>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-[system-ui] text-[14px] font-medium text-heading">
-                    {formatNaira(tx.amount)}
-                  </p>
-                  <p
-                    className={clsx(
-                      "mt-1 text-[12px] font-medium",
-                      tx.status === "Paid" && "text-green-700 dark:text-green-500",
-                      tx.status === "Pending" && "text-yellow-700 dark:text-yellow-500",
-                      tx.status === "Refunded" && "text-red-600",
-                    )}
-                  >
-                    {tx.status}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          {recentOrders.length === 0 ? (
+            <p className="mt-8 text-center text-[14px] text-muted">
+              Orders will show up here after checkout.
+            </p>
+          ) : (
+            <ul className="mt-5 divide-y divide-border">
+              {recentOrders.slice(0, 6).map((tx) => (
+                <li
+                  key={tx.id}
+                  className="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-[14px] font-medium text-heading">
+                      {tx.customer}
+                    </p>
+                    <p className="truncate text-[13px] text-muted">
+                      {tx.product} · {tx.id}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-muted">
+                      {formatOrderDate(tx.date)}
+                    </p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="font-[system-ui] text-[14px] font-medium text-heading">
+                      {formatNaira(tx.amount)}
+                    </p>
+                    <p
+                      className={clsx(
+                        "mt-1 text-[12px] font-medium",
+                        tx.status === "Paid" &&
+                          "text-green-700 dark:text-green-500",
+                        tx.status === "Pending" &&
+                          "text-yellow-700 dark:text-yellow-500",
+                        tx.status === "Failed" && "text-red-600",
+                      )}
+                    >
+                      {tx.status}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
     </div>

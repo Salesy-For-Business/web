@@ -158,3 +158,10 @@ h2 {
   letter-spacing: -0.5px;
 }
 
+/* Safari iOS zooms focused fields under 16px — keep form controls at 16px. */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+

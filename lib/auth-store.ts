@@ -4,6 +4,11 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { DEMO_OTP } from "@/lib/auth-schemas";
 import type { LiveChatProviderId } from "@/lib/live-chat";
+import {
+  planLabel as planLabelFromPlans,
+  salesyFeeRate as salesyFeeRateFromPlans,
+  productListingLimit as productListingLimitFromPlans,
+} from "@/lib/plans";
 
 export type AuthStatus =
   | "anonymous"
@@ -49,6 +54,8 @@ export type AuthBusiness = {
   plan: AuthPlan;
   /** salesy.link/{handle} */
   storeHandle: string;
+  /** External website or social URL */
+  websiteUrl?: string;
   /** Live chat widget on the public storefront. */
   liveChatEnabled: boolean;
   /** Which provider the seller set up. */
@@ -76,6 +83,13 @@ type AuthState = {
   payoutPin: string | null;
   hydrated: boolean;
   setHydrated: (value: boolean) => void;
+  hydrateFromSession: (input: {
+    status: AuthStatus;
+    user: AuthUser | null;
+    business: AuthBusiness | null;
+  }) => void;
+  beginPasswordReset: (email: string) => void;
+  markResetVerified: () => void;
   signUpProfile: (input: {
     firstName: string;
     lastName: string;
@@ -140,18 +154,16 @@ export function slugifyHandle(name: string) {
 }
 
 export function planLabel(plan: AuthPlan) {
-  if (plan === "boutique") return "Boutique";
-  if (plan === "pro") return "Pro";
-  return "Free";
+  return planLabelFromPlans(plan);
 }
 
 /** Salesy platform fee rate — Free only. Boutique and Pro: no commission. */
 export function salesyFeeRate(plan: AuthPlan) {
-  return plan === "free" ? 0.05 : 0;
+  return salesyFeeRateFromPlans(plan);
 }
 
 export function productListingLimit(plan: AuthPlan) {
-  return plan === "free" ? 5 : Infinity;
+  return productListingLimitFromPlans(plan);
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -166,6 +178,34 @@ export const useAuthStore = create<AuthState>()(
       payoutPin: null,
       hydrated: false,
       setHydrated: (value) => set({ hydrated: value }),
+      hydrateFromSession: ({ status, user, business }) =>
+        set({
+          status,
+          user: user
+            ? {
+                ...user,
+                password: null,
+              }
+            : null,
+          business,
+          otpPurpose:
+            status === "pendingVerify"
+              ? "signup"
+              : status === "anonymous"
+                ? null
+                : get().otpPurpose === "reset"
+                  ? "reset"
+                  : null,
+        }),
+
+      beginPasswordReset: (email) =>
+        set({
+          otpPurpose: "reset",
+          resetEmail: email.trim().toLowerCase(),
+          resetReady: false,
+        }),
+
+      markResetVerified: () => set({ resetReady: true }),
 
       signUpProfile: ({ firstName, lastName, email, phone, password, provider }) => {
         const normalized = email.trim().toLowerCase();

@@ -1,22 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import { AuthGate, AuthShell, PasswordField, SubmitButton } from "@/components/auth";
+import {
+  getApiError,
+  useResetPasswordMutation,
+} from "@/lib/auth/queries";
 import {
   resetPasswordSchema,
   type ResetPasswordValues,
 } from "@/lib/auth-schemas";
-import { delayMs, useAuthStore } from "@/lib/auth-store";
-import { fieldErrorClass } from "@/components/auth/styles";
+import { useAuthStore } from "@/lib/auth-store";
 
 function ResetForm() {
   const router = useRouter();
-  const resetPassword = useAuthStore((s) => s.resetPassword);
-  const [formError, setFormError] = useState<string | null>(null);
+  const reset = useResetPasswordMutation();
+  const clearOtpFlow = useAuthStore((s) => s.clearOtpFlow);
+  const hydrateFromSession = useAuthStore((s) => s.hydrateFromSession);
 
   const {
     register,
@@ -27,15 +31,26 @@ function ResetForm() {
     defaultValues: { password: "", confirmPassword: "" },
   });
 
+  const loading = isSubmitting || reset.isPending;
+
   async function onSubmit(values: ResetPasswordValues) {
-    setFormError(null);
-    await delayMs();
-    const result = resetPassword(values.password);
-    if (!result.ok) {
-      setFormError(result.error);
-      return;
+    try {
+      await reset.mutateAsync({
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+        resetVerified: true,
+      });
+      clearOtpFlow();
+      hydrateFromSession({
+        status: "anonymous",
+        user: null,
+        business: null,
+      });
+      toast.success("Password updated. Sign in with your new password.");
+      router.push("/signin");
+    } catch (err) {
+      toast.error(getApiError(err, "Could not update password."));
     }
-    router.push("/signin");
   }
 
   return (
@@ -62,12 +77,7 @@ function ResetForm() {
           error={errors.confirmPassword?.message}
           {...register("confirmPassword")}
         />
-        {formError ? (
-          <p className={fieldErrorClass} role="alert">
-            {formError}
-          </p>
-        ) : null}
-        <SubmitButton loading={isSubmitting}>Update password</SubmitButton>
+        <SubmitButton loading={loading}>Update password</SubmitButton>
       </form>
     </AuthShell>
   );

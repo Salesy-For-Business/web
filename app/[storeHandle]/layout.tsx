@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { StorefrontShell } from "@/components/storefront/storefront-shell";
 import { StorefrontMissing } from "@/components/storefront/storefront-missing";
-import { getStoreByHandle, normalizeStoreHandle } from "@/lib/storefront";
+import { normalizeStoreHandle } from "@/lib/storefront";
+import { resolveStorefront } from "@/lib/storefront-db";
 
 type StoreHandleParams = { storeHandle: string };
 
@@ -11,7 +12,7 @@ export async function generateMetadata({
   params: Promise<StoreHandleParams>;
 }): Promise<Metadata> {
   const { storeHandle } = await params;
-  const store = getStoreByHandle(storeHandle);
+  const store = await resolveStorefront(storeHandle);
   if (!store) {
     return {
       title: "Store not found — Salesy",
@@ -25,11 +26,8 @@ export async function generateMetadata({
 }
 
 /**
- * Resolve `/{storeHandle}` here so missing stores get the storefront-specific
- * empty state (not the marketing 404). `notFound()` from a layout bubbles to
- * the root `app/not-found.tsx`, which is the wrong UI for this case.
- *
- * Later: swap `getStoreByHandle` for an API/DB fetch; keep this layout shape.
+ * Resolve `/{storeHandle}` from MongoDB (with seed fallback for demo).
+ * Missing stores get the storefront-specific empty state.
  */
 export default async function StoreHandleLayout({
   children,
@@ -40,7 +38,7 @@ export default async function StoreHandleLayout({
 }) {
   const { storeHandle: raw } = await params;
   const storeHandle = normalizeStoreHandle(raw);
-  const store = getStoreByHandle(storeHandle);
+  const store = await resolveStorefront(storeHandle);
 
   if (!store) {
     return <StorefrontMissing handle={storeHandle} />;

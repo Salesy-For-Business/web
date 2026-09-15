@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Check, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 import {
   AuthGate,
   AuthShell,
@@ -13,11 +15,17 @@ import {
   SubmitButton,
   TextField,
 } from "@/components/auth";
+import {
+  getApiError,
+  useCompleteBusinessMutation,
+  useHandleAvailability,
+} from "@/lib/auth/queries";
 import { businessSchema, type BusinessValues } from "@/lib/auth-schemas";
-import { delayMs, useAuthStore, slugifyHandle, type AuthBusiness } from "@/lib/auth-store";
+import { slugifyHandle, useAuthStore } from "@/lib/auth-store";
 import { NIGERIAN_STATES } from "@/lib/nigeria";
 import {
   fieldErrorClass,
+  fieldHintClass,
   fieldLabelClass,
   inputClass,
   textareaClass,
@@ -67,19 +75,23 @@ function ToggleRow({
 function BusinessForm() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
-  const completeBusiness = useAuthStore((s) => s.completeBusiness);
-  const [formError, setFormError] = useState<string | null>(null);
+  const hydrateFromSession = useAuthStore((s) => s.hydrateFromSession);
+  const completeBusiness = useCompleteBusinessMutation();
+  const [debouncedHandle, setDebouncedHandle] = useState("");
 
   const {
     register,
     handleSubmit,
     control,
     setValue,
+    setError,
+    clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<BusinessValues>({
     resolver: zodResolver(businessSchema),
     defaultValues: {
       businessName: "",
+      storeHandle: "",
       usePersonalEmail: true,
       businessEmail: "",
       usePersonalPhone: true,
@@ -106,50 +118,80 @@ function BusinessForm() {
   const hasPhysicalAddress = useWatch({ control, name: "hasPhysicalAddress" });
   const useProfileOwner = useWatch({ control, name: "useProfileOwner" });
   const isRegistered = useWatch({ control, name: "isRegistered" });
+  const businessName = useWatch({ control, name: "businessName" });
+  const storeHandle = useWatch({ control, name: "storeHandle" }) ?? "";
+
+  useEffect(() => {
+    if (!businessName?.trim() || storeHandle.trim()) return;
+    setValue("storeHandle", slugifyHandle(businessName), {
+      shouldValidate: false,
+    });
+  }, [businessName, storeHandle, setValue]);
+
+  useEffect(() => {
+    const handle = storeHandle.trim().toLowerCase();
+    const timer = window.setTimeout(() => setDebouncedHandle(handle), 350);
+    return () => window.clearTimeout(timer);
+  }, [storeHandle]);
+
+  const handleCheck = useHandleAvailability(
+    debouncedHandle,
+    debouncedHandle.length >= 3,
+  );
+
+  useEffect(() => {
+    if (!handleCheck.isSuccess) return;
+    if (!handleCheck.data.available) {
+      setError("storeHandle", {
+        type: "manual",
+        message:
+          handleCheck.data.message ||
+          "That store handle is already registered. Choose another.",
+      });
+    } else {
+      clearErrors("storeHandle");
+    }
+  }, [handleCheck.isSuccess, handleCheck.data, setError, clearErrors]);
+
+  const loading = isSubmitting || completeBusiness.isPending;
+  const handleUnavailable =
+    handleCheck.isSuccess && handleCheck.data.available === false;
+  const handleAvailable =
+    handleCheck.isSuccess && handleCheck.data.available === true;
+  const handleChecking =
+    debouncedHandle.length >= 3 &&
+    (handleCheck.isFetching || handleCheck.isPending);
 
   async function onSubmit(values: BusinessValues) {
     if (!user) return;
-    setFormError(null);
-    await delayMs();
+    if (handleUnavailable) {
+      setError("storeHandle", {
+        type: "manual",
+        message: "That store handle is already registered. Choose another.",
+      });
+      toast.error("That store handle is already registered. Choose another.");
+      return;
+    }
 
-    const business: AuthBusiness = {
-      businessName: values.businessName,
-      businessEmail: values.usePersonalEmail
-        ? user.email
-        : (values.businessEmail ?? "").trim().toLowerCase(),
-      businessPhone: values.usePersonalPhone
-        ? user.phone
-        : (values.businessPhone as string),
-      logoDataUrl: values.logoDataUrl,
-      hasPhysicalAddress: values.hasPhysicalAddress,
-      street: values.hasPhysicalAddress ? values.street : undefined,
-      city: values.hasPhysicalAddress ? values.city : undefined,
-      state: values.hasPhysicalAddress ? values.state : undefined,
-      description: values.description,
-      ownerFirstName: values.useProfileOwner
-        ? user.firstName
-        : (values.ownerFirstName ?? ""),
-      ownerLastName: values.useProfileOwner
-        ? user.lastName
-        : (values.ownerLastName ?? ""),
-      ownerEmail: values.useProfileOwner
-        ? user.email
-        : (values.ownerEmail ?? "").trim().toLowerCase(),
-      ownerPhone: values.useProfileOwner
-        ? user.phone
-        : (values.ownerPhone as string),
-      ownerRole: values.ownerRole,
-      isRegistered: values.isRegistered,
-      cacNumber: values.isRegistered ? values.cacNumber?.trim() : undefined,
-      plan: "free",
-      storeHandle: slugifyHandle(values.businessName),
-      liveChatEnabled: false,
-      liveChatProvider: "smartsupp",
-      liveChatSnippet: "",
-    };
-
-    completeBusiness(business);
-    router.push("/dashboard");
+    try {
+      const data = await completeBusiness.mutateAsync(values);
+      hydrateFromSession({
+        status: data.next,
+        user: data.user,
+        business: data.business,
+      });
+      toast.success("Store created. Welcome to your dashboard.");
+      router.push("/dashboard");
+    } catch (err) {
+      const message = getApiError(
+        err,
+        "Could not save your business. Try again.",
+      );
+      if (/already registered|handle/i.test(message)) {
+        setError("storeHandle", { type: "manual", message });
+      }
+      toast.error(message);
+    }
   }
 
   return (
@@ -167,6 +209,86 @@ function BusinessForm() {
           placeholder="e.g Quest Store"
           {...register("businessName")}
         />
+
+        <div>
+          <label htmlFor="storeHandle" className={fieldLabelClass}>
+            Store URL
+          </label>
+          <div
+            className={clsx(
+              "flex h-12 w-full overflow-hidden rounded-lg border bg-surface",
+              errors.storeHandle
+                ? "border-red-500"
+                : "border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/30",
+            )}
+          >
+            <span className="flex shrink-0 items-center border-r border-border bg-surface px-3 text-[13px] text-muted sm:text-[14px]">
+              https://salesy.link/
+            </span>
+            <input
+              id="storeHandle"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder="newstore"
+              aria-invalid={errors.storeHandle ? true : undefined}
+              className="min-w-0 flex-1 border-0 bg-background px-3 text-[16px] text-foreground outline-none placeholder:text-muted"
+              value={storeHandle}
+              onChange={(e) => {
+                const next = e.target.value
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]/g, "")
+                  .slice(0, 24);
+                setValue("storeHandle", next, { shouldValidate: true });
+              }}
+            />
+          </div>
+          <div className="mt-1.5 flex min-h-5 items-center gap-1.5" aria-live="polite">
+            {errors.storeHandle ? (
+              <>
+                <X className="size-3.5 shrink-0 text-red-600 dark:text-red-500" aria-hidden />
+                <p className="text-[13px] text-red-600 dark:text-red-500" role="alert">
+                  {errors.storeHandle.message}
+                </p>
+              </>
+            ) : debouncedHandle.length >= 3 ? (
+              <>
+                {handleChecking ? (
+                  <>
+                    <Loader2
+                      className="size-3.5 shrink-0 animate-spin text-muted"
+                      aria-hidden
+                    />
+                    <p className={fieldHintClass}>Checking availability…</p>
+                  </>
+                ) : handleAvailable ? (
+                  <>
+                    <Check
+                      className="size-3.5 shrink-0 text-emerald-600"
+                      aria-hidden
+                    />
+                    <p className="text-[13px] text-emerald-700 dark:text-emerald-400">
+                      Handle is available.
+                    </p>
+                  </>
+                ) : handleUnavailable ? (
+                  <>
+                    <X
+                      className="size-3.5 shrink-0 text-red-600 dark:text-red-500"
+                      aria-hidden
+                    />
+                    <p className="text-[13px] text-red-600 dark:text-red-500">
+                      Already registered. Choose another.
+                    </p>
+                  </>
+                ) : null}
+              </>
+            ) : (
+              <p className={fieldHintClass}>
+                Letters and numbers only. At least 3 characters.
+              </p>
+            )}
+          </div>
+        </div>
 
         <div className="space-y-3">
           <Controller
@@ -402,13 +524,9 @@ function BusinessForm() {
           />
         ) : null}
 
-        {formError ? (
-          <p className={fieldErrorClass} role="alert">
-            {formError}
-          </p>
-        ) : null}
-
-        <SubmitButton loading={isSubmitting}>Open my dashboard</SubmitButton>
+        <SubmitButton loading={loading} disabled={handleUnavailable}>
+          Open my dashboard
+        </SubmitButton>
       </form>
     </AuthShell>
   );

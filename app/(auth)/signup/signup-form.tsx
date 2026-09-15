@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
 import {
   AuthDivider,
   AuthGate,
@@ -16,15 +17,18 @@ import {
   SubmitButton,
   TextField,
 } from "@/components/auth";
+import {
+  getApiError,
+  useSignupMutation,
+} from "@/lib/auth/queries";
 import { profileSchema, type ProfileValues } from "@/lib/auth-schemas";
-import { delayMs, useAuthStore } from "@/lib/auth-store";
+import { delayMs, MOCK_GOOGLE, useAuthStore } from "@/lib/auth-store";
 import { fieldErrorClass } from "@/components/auth/styles";
 
 function SignupProfileForm() {
   const router = useRouter();
-  const signUpProfile = useAuthStore((s) => s.signUpProfile);
+  const signup = useSignupMutation();
   const beginGoogleSignup = useAuthStore((s) => s.beginGoogleSignup);
-  const [formError, setFormError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const {
@@ -51,9 +55,9 @@ function SignupProfileForm() {
 
   const provider = watch("provider");
   const googleMode = provider === "google";
+  const loading = isSubmitting || signup.isPending;
 
   async function onGoogle() {
-    setFormError(null);
     setGoogleLoading(true);
     await delayMs(400);
     const profile = beginGoogleSignup();
@@ -71,24 +75,18 @@ function SignupProfileForm() {
   }
 
   async function onSubmit(values: ProfileValues) {
-    setFormError(null);
-    await delayMs();
-
-    const result = signUpProfile({
-      firstName: values.firstName,
-      lastName: values.lastName,
-      email: values.email,
-      phone: values.phone,
-      password: values.provider === "google" ? null : (values.password ?? null),
-      provider: values.provider,
-    });
-
-    if (!result.ok) {
-      setFormError(result.error);
-      return;
+    try {
+      const data = await signup.mutateAsync(values);
+      if (data.next === "pendingBusiness") {
+        toast.success("Account ready. Set up your business next.");
+        router.push("/signup/business");
+      } else {
+        toast.success(data.message ?? "Check your email for a verification code.");
+        router.push("/signup/verify");
+      }
+    } catch (err) {
+      toast.error(getApiError(err, "Could not create your account."));
     }
-
-    router.push(values.provider === "google" ? "/signup/business" : "/signup/verify");
   }
 
   return (
@@ -111,7 +109,7 @@ function SignupProfileForm() {
           <GoogleButton
             label="Continue with Google"
             loading={googleLoading}
-            disabled={isSubmitting}
+            disabled={loading}
             onClick={() => void onGoogle()}
           />
           <AuthDivider />
@@ -119,8 +117,10 @@ function SignupProfileForm() {
       ) : (
         <p className="mb-6 rounded-lg border border-border bg-surface px-4 py-3 text-[14px] text-muted">
           Continuing as{" "}
-          <span className="font-medium text-heading">Adaeze Okonkwo</span> via
-          Google. Add your phone to finish this step.
+          <span className="font-medium text-heading">
+            {MOCK_GOOGLE.firstName} {MOCK_GOOGLE.lastName}
+          </span>{" "}
+          via Google. Add your phone to finish this step.
         </p>
       )}
 
@@ -216,13 +216,7 @@ function SignupProfileForm() {
           </p>
         ) : null}
 
-        {formError ? (
-          <p className={fieldErrorClass} role="alert">
-            {formError}
-          </p>
-        ) : null}
-
-        <SubmitButton loading={isSubmitting}>
+        <SubmitButton loading={loading}>
           {googleMode ? "Continue to business" : "Continue"}
         </SubmitButton>
         {googleMode ? (
