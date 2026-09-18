@@ -1,7 +1,7 @@
 "use client";
 
 import { ContactChannels } from "@/components/storefront/contact-channels";
-import { ProductGrid } from "@/components/storefront/product-grid";
+import { ShopCatalog } from "@/components/storefront/shop-catalog";
 import { STOREFRONT_BRAND_ID } from "@/components/storefront/shell";
 import { useStorefront } from "@/components/storefront/store-context";
 
@@ -35,19 +35,7 @@ export default function StoreHomePage() {
       </section>
 
       <section>
-        <div className="mb-6 flex items-end justify-between gap-4">
-          <h2 className="font-display text-[22px] text-heading">Shop</h2>
-          <p className="text-[13px] text-muted">
-            {store.products.length} products
-          </p>
-        </div>
-        {store.products.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border px-6 py-12 text-center text-[14px] text-muted">
-            This store hasn’t listed products yet. Check back soon.
-          </p>
-        ) : (
-          <ProductGrid products={store.products} />
-        )}
+        <ShopCatalog products={store.products} />
       </section>
 
       <ContactChannels />

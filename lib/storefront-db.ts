@@ -20,6 +20,9 @@ function productToStore(p: ProductLean): StoreProduct {
     inStock: p.inStock,
     images: p.images?.length ? p.images : undefined,
     tags: p.tags?.length ? p.tags : undefined,
+    createdAt: p.createdAt
+      ? new Date(p.createdAt).toISOString()
+      : undefined,
   };
 }
 

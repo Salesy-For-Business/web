@@ -22,6 +22,8 @@ export type StoreProduct = {
   images?: string[];
   /** Short tags shown on detail */
   tags?: string[];
+  /** ISO date for catalog sorting */
+  createdAt?: string;
 };
 
 export type Storefront = {
@@ -73,6 +75,7 @@ export const DEMO_STORE: Storefront = {
       category: "Bags",
       inStock: true,
       tags: ["Bestseller", "Washable"],
+      createdAt: "2026-08-01T10:00:00.000Z",
     },
     {
       id: "p2",
@@ -85,6 +88,7 @@ export const DEMO_STORE: Storefront = {
       category: "Accessories",
       inStock: true,
       tags: ["Genuine leather"],
+      createdAt: "2026-08-05T10:00:00.000Z",
     },
     {
       id: "p3",
@@ -97,6 +101,7 @@ export const DEMO_STORE: Storefront = {
       category: "Jewelry",
       inStock: true,
       tags: ["Set of 3"],
+      createdAt: "2026-08-10T10:00:00.000Z",
     },
     {
       id: "p4",
@@ -108,6 +113,7 @@ export const DEMO_STORE: Storefront = {
       accent: "#365314",
       category: "Bags",
       inStock: true,
+      createdAt: "2026-08-15T10:00:00.000Z",
     },
     {
       id: "p5",
@@ -120,6 +126,7 @@ export const DEMO_STORE: Storefront = {
       category: "Bags",
       inStock: true,
       tags: ["Evening"],
+      createdAt: "2026-08-20T10:00:00.000Z",
     },
     {
       id: "p6",
@@ -131,6 +138,7 @@ export const DEMO_STORE: Storefront = {
       accent: "#1D4ED8",
       category: "Jewelry",
       inStock: true,
+      createdAt: "2026-08-25T10:00:00.000Z",
     },
     {
       id: "p7",
@@ -144,6 +152,7 @@ export const DEMO_STORE: Storefront = {
       category: "Bags",
       inStock: true,
       tags: ["New"],
+      createdAt: "2026-09-01T10:00:00.000Z",
     },
     {
       id: "p8",
@@ -156,6 +165,7 @@ export const DEMO_STORE: Storefront = {
       category: "Accessories",
       inStock: true,
       tags: ["Pack of 4"],
+      createdAt: "2026-09-10T10:00:00.000Z",
     },
   ],
 };

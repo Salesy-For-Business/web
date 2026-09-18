@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Check, Minus, Plus } from "lucide-react";
 import clsx from "clsx";
 import { ProductImage } from "@/components/storefront/product-grid";
@@ -19,23 +20,30 @@ import {
 
 export function ProductDetail({ product }: { product: StoreProduct }) {
   const store = useStorefront();
+  const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
 
+  function cartPayload() {
+    return {
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      price: product.price,
+      accent: product.accent,
+    };
+  }
+
   function addToCart() {
-    addItem(
-      {
-        productId: product.id,
-        slug: product.slug,
-        name: product.name,
-        price: product.price,
-        accent: product.accent,
-      },
-      qty,
-    );
+    addItem(cartPayload(), qty);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1800);
+  }
+
+  function buyNow() {
+    addItem(cartPayload(), qty);
+    router.push(storePath(store.handle, "/checkout"));
   }
 
   return (
@@ -70,11 +78,11 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
             ))}
           </div>
         ) : null}
-        <p className="mt-5 max-w-prose text-[15px] leading-6 text-muted">
+        <p className="mt-5 max-w-prose text-[16px] leading-6 text-muted">
           {product.description}
         </p>
 
-        <div className="mt-8 flex flex-wrap items-center gap-4">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
           <div className="inline-flex h-12 items-center rounded-lg border border-border">
             <button
               type="button"
@@ -84,7 +92,7 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
             >
               <Minus className="size-4" />
             </button>
-            <span className="min-w-10 text-center text-[15px] font-medium tabular-nums">
+            <span className="min-w-10 text-center text-[16px] font-medium tabular-nums">
               {qty}
             </span>
             <button
@@ -100,7 +108,7 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
             type="button"
             disabled={!product.inStock}
             onClick={addToCart}
-            className={clsx(primaryButtonClass, "w-auto min-w-44 px-6")}
+            className={clsx(primaryButtonClass, "w-auto min-w-40 px-6")}
           >
             {added ? (
               <span className="inline-flex items-center gap-2">
@@ -111,6 +119,14 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
             ) : (
               "Out of stock"
             )}
+          </button>
+          <button
+            type="button"
+            disabled={!product.inStock}
+            onClick={buyNow}
+            className={clsx(secondaryButtonClass, "w-auto min-w-40 px-6")}
+          >
+            Buy now
           </button>
         </div>
 

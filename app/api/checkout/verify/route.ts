@@ -24,6 +24,10 @@ export async function GET(request: Request) {
         orderId: String(existing._id),
         total: existing.total,
         storeHandle: existing.storeHandle,
+        items: existing.items.map((i) => ({
+          productId: String(i.productId),
+          name: i.name,
+        })),
       });
     }
 
@@ -44,6 +48,10 @@ export async function GET(request: Request) {
       orderId: String(result.order._id),
       total: result.order.total,
       storeHandle: result.order.storeHandle,
+      items: result.order.items.map((i) => ({
+        productId: String(i.productId),
+        name: i.name,
+      })),
     });
   } catch (err) {
     console.error("[checkout/verify]", err);

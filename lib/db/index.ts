@@ -27,3 +27,9 @@ export {
   type OrderStatus,
   type OrderChannel,
 } from "@/lib/db/models/order";
+export {
+  Review,
+  type IReview,
+  type ReviewDocument,
+  type ReviewLean,
+} from "@/lib/db/models/review";
