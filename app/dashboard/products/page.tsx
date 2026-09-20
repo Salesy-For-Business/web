@@ -5,7 +5,7 @@ import { Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import clsx from "clsx";
 import { DashboardPageHeader } from "@/components/dashboard/page-chrome";
-import { primaryButtonClass, secondaryButtonClass } from "@/components/auth/styles";
+import { primaryButtonClass } from "@/components/auth/styles";
 import { formatNaira } from "@/lib/dashboard";
 import {
   getApiError,
@@ -93,83 +93,84 @@ export default function ProductsPage() {
           </Link>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border">
-          <table className="w-full text-left text-[14px]">
-            <thead className="border-b border-border bg-surface text-[12px] uppercase tracking-wide text-muted">
-              <tr>
-                <th className="px-4 py-3 font-medium">Product</th>
-                <th className="hidden px-4 py-3 font-medium sm:table-cell">
-                  Stock
-                </th>
-                <th className="px-4 py-3 font-medium text-right">Price</th>
-                <th className="px-4 py-3 font-medium text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-background">
-              {products.map((product) => (
-                <tr key={product.id} className="hover:bg-surface/60">
-                  <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-3">
-                      {product.images[0] ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={product.images[0]}
-                          alt=""
-                          className="size-10 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <div
-                          className="size-10 rounded-lg"
-                          style={{ background: product.accent }}
-                        />
-                      )}
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-heading">
-                          {product.name}
-                        </p>
-                        <p className="truncate text-[12px] text-muted">
-                          {product.category}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="hidden px-4 py-3.5 text-muted sm:table-cell">
-                    {product.inStock
-                      ? product.stockQty != null
-                        ? `${product.stockQty} left`
-                        : "In stock"
-                      : "Out of stock"}
-                  </td>
-                  <td className="px-4 py-3.5 text-right font-[system-ui] text-heading">
-                    {formatNaira(product.price)}
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <div className="flex justify-end gap-2">
-                      <Link
-                        href={`/dashboard/products/${product.id}/edit`}
-                        className={clsx(
-                          secondaryButtonClass,
-                          "h-9 w-auto gap-1.5 px-3 text-[13px]",
-                        )}
-                      >
-                        <Pencil className="size-3.5" />
-                        Edit
-                      </Link>
-                      <button
-                        type="button"
-                        className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-[13px] text-red-600 hover:bg-surface"
-                        onClick={() => void onDelete(product.id, product.name)}
-                        disabled={remove.isPending}
-                      >
-                        <Trash2 className="size-3.5" />
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="-mx-4 overflow-x-auto overscroll-x-contain sm:mx-0">
+          <div className="inline-block min-w-full align-middle sm:rounded-xl sm:border sm:border-border">
+            <div className="overflow-hidden border-y border-border sm:rounded-xl sm:border">
+              <table className="w-full min-w-[36rem] text-left text-[14px]">
+                <thead className="border-b border-border bg-surface text-[12px] uppercase tracking-wide text-muted">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Product</th>
+                    <th className="px-4 py-3 font-medium">Stock</th>
+                    <th className="px-4 py-3 font-medium text-right">Price</th>
+                    <th className="px-4 py-3 font-medium text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border bg-background">
+                  {products.map((product) => (
+                    <tr key={product.id} className="hover:bg-surface/60">
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-3">
+                          {product.images[0] ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={product.images[0]}
+                              alt=""
+                              className="size-10 shrink-0 rounded-lg object-cover"
+                            />
+                          ) : (
+                            <div
+                              className="size-10 shrink-0 rounded-lg"
+                              style={{ background: product.accent }}
+                            />
+                          )}
+                          <div className="min-w-0 max-w-[12rem] sm:max-w-xs">
+                            <p className="truncate font-medium text-heading">
+                              {product.name}
+                            </p>
+                            <p className="truncate text-[12px] text-muted">
+                              {product.category}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3.5 text-muted">
+                        {product.inStock
+                          ? product.stockQty != null
+                            ? `${product.stockQty} left`
+                            : "In stock"
+                          : "Out of stock"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3.5 text-right font-[system-ui] text-heading">
+                        {formatNaira(product.price)}
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        <div className="inline-flex items-center justify-end gap-2 whitespace-nowrap">
+                          <Link
+                            href={`/dashboard/products/${product.id}/edit`}
+                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[13px] font-medium text-link hover:bg-surface"
+                          >
+                            <Pencil className="size-3.5" aria-hidden />
+                            Edit
+                          </Link>
+                          <button
+                            type="button"
+                            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-[13px] font-medium text-red-600 hover:bg-surface disabled:pointer-events-none disabled:opacity-60"
+                            onClick={() =>
+                              void onDelete(product.id, product.name)
+                            }
+                            disabled={remove.isPending}
+                          >
+                            <Trash2 className="size-3.5" aria-hidden />
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -32,6 +32,7 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
       name: product.name,
       price: product.price,
       accent: product.accent,
+      image: product.images?.[0],
     };
   }
 
@@ -104,30 +105,32 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
               <Plus className="size-4" />
             </button>
           </div>
-          <button
-            type="button"
-            disabled={!product.inStock}
-            onClick={addToCart}
-            className={clsx(primaryButtonClass, "w-auto min-w-40 px-6")}
-          >
-            {added ? (
-              <span className="inline-flex items-center gap-2">
-                <Check className="size-4" /> Added
-              </span>
-            ) : product.inStock ? (
-              "Add to cart"
-            ) : (
-              "Out of stock"
-            )}
-          </button>
-          <button
-            type="button"
-            disabled={!product.inStock}
-            onClick={buyNow}
-            className={clsx(secondaryButtonClass, "w-auto min-w-40 px-6")}
-          >
-            Buy now
-          </button>
+          <div className="grid gap-2 grid-cols-2">
+            <button
+              type="button"
+              disabled={!product.inStock}
+              onClick={addToCart}
+              className={clsx(primaryButtonClass, "w-auto min-w-40 px-6")}
+            >
+              {added ? (
+                <span className="inline-flex items-center gap-2">
+                  <Check className="size-4" /> Added
+                </span>
+              ) : product.inStock ? (
+                "Add to cart"
+              ) : (
+                "Out of stock"
+              )}
+            </button>
+            <button
+              type="button"
+              disabled={!product.inStock}
+              onClick={buyNow}
+              className={clsx(secondaryButtonClass, "w-auto min-w-40 px-6")}
+            >
+              Buy now
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap gap-3">

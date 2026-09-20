@@ -102,7 +102,7 @@ export function StorefrontHeader() {
           <ThemeToggle />
           <Link
             href={storePath(store.handle, "/cart")}
-            className="relative inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-[13px] font-medium text-heading hover:bg-surface"
+            className="relative inline-flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium text-heading hover:bg-surface"
           >
             <ShoppingBag className="size-4" aria-hidden />
             <span className="hidden sm:inline">Cart</span>

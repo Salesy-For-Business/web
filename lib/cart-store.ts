@@ -9,6 +9,8 @@ export type CartLine = {
   name: string;
   price: number;
   accent: string;
+  /** First product image URL when available */
+  image?: string;
   qty: number;
 };
 

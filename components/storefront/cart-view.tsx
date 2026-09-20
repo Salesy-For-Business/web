@@ -53,12 +53,23 @@ export function CartView() {
         <ul className="divide-y divide-border rounded-xl border border-border bg-background">
           {lines.map((line) => (
             <li key={line.productId} className="flex gap-4 p-4 sm:p-5">
-              <div
-                className="size-20 shrink-0 rounded-lg sm:size-24"
-                style={{
-                  background: `linear-gradient(145deg, ${line.accent}, color-mix(in srgb, ${line.accent} 50%, #111))`,
-                }}
-              />
+              <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-surface sm:size-24">
+                {line.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={line.image}
+                    alt={line.name}
+                    className="absolute inset-0 size-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background: `linear-gradient(145deg, ${line.accent}, color-mix(in srgb, ${line.accent} 50%, #111))`,
+                    }}
+                  />
+                )}
+              </div>
               <div className="min-w-0 flex-1">
                 <Link
                   href={productHref(store.handle, line.slug)}
