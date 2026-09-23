@@ -66,6 +66,26 @@ const steps = {
       description: "Use promotions and insights to find the next customer.",
     },
   ],
+  partnership: [
+    {
+      photo: "/photos/publish.jpg",
+      alt: "A shop owner at her counter with a phone ready to share",
+      title: "Get your invite link",
+      description: "Grab your unique code from the Refer & earn dashboard.",
+    },
+    {
+      photo: "/photos/products.jpg",
+      alt: "A market vendor smiling with her phone beside her goods",
+      title: "Invite sellers you know",
+      description: "Share it with other entrepreneurs ready to sell online.",
+    },
+    {
+      photo: "/photos/grow.jpg",
+      alt: "A vendor selling plantain at an outdoor stall in Nigeria",
+      title: "Earn when they grow",
+      description: "Unlock rewards as soon as their store goes live.",
+    },
+  ],
 } as const;
 
 export default function Sections() {

@@ -25,7 +25,7 @@ export default function Help() {
       data-aos-delay="80"
     >
       <h2 className="max-w-3xl text-5xl leading-14 tracking-[-0.5px] sm:text-[56px] sm:leading-16">
-        What can we help you with?
+        What we offer
       </h2>
 
       <div
