@@ -97,6 +97,7 @@ function BusinessForm() {
       usePersonalPhone: true,
       businessPhone: "",
       logoDataUrl: undefined,
+      socialImageUrl: undefined,
       hasPhysicalAddress: false,
       street: "",
       city: "",
@@ -352,6 +353,20 @@ function BusinessForm() {
               value={field.value}
               onChange={field.onChange}
               error={errors.logoDataUrl?.message}
+            />
+          )}
+        />
+
+        <Controller
+          name="socialImageUrl"
+          control={control}
+          render={({ field }) => (
+            <FileDropzone
+              label="Social share image (optional)"
+              hint="Shown when your store link is shared on WhatsApp, X, or Facebook. Falls back to your logo, then your first product photo. Landscape images (1200×630) look best."
+              value={field.value}
+              onChange={field.onChange}
+              error={errors.socialImageUrl?.message}
             />
           )}
         />

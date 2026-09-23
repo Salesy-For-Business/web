@@ -78,6 +78,26 @@ export default function StoreProfilePage() {
           <p className="mt-6 text-[15px] leading-7 text-foreground">
             {business.description}
           </p>
+
+          <div className="mt-6">
+            <dt className="text-[12px] uppercase tracking-wide text-muted">
+              Social share image
+            </dt>
+            {business.socialImageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={business.socialImageUrl}
+                alt=""
+                className="mt-2 h-32 w-full max-w-sm rounded-lg border border-border object-cover"
+              />
+            ) : (
+              <p className="mt-1 text-[14px] text-heading">
+                Not set — shared links use your logo, or your first product
+                photo if you have no logo.
+              </p>
+            )}
+          </div>
+
           <dl className="mt-8 grid gap-4 sm:grid-cols-2">
             <div>
               <dt className="text-[12px] uppercase tracking-wide text-muted">Email</dt>

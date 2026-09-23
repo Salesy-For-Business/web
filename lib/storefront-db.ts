@@ -53,6 +53,7 @@ export async function resolveStorefront(
         tagline: business.description.slice(0, 120),
         description: business.description,
         logoDataUrl: business.logoDataUrl || null,
+        socialImageUrl: business.socialImageUrl || null,
         brandColor: "#0F766E",
         contact: {
           whatsapp: waDigits.startsWith("234")

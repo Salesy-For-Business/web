@@ -53,3 +53,38 @@ export async function uploadImageBuffer(
     stream.end(buffer);
   });
 }
+
+const DATA_URL_RE = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/;
+
+/**
+ * Business logo / social image can arrive as an inline base64 `data:` URL
+ * (from `FileDropzone`, before a Business document — and Cloudinary's
+ * owned-business-gated upload route — exist). A `data:` URL can't be used
+ * as `og:image` / `twitter:image` (social crawlers fetch an absolute HTTP
+ * URL, they don't decode inline data), so hoist it to Cloudinary here and
+ * store the real `https://` URL instead.
+ *
+ * Already-hosted URLs (or anything else) pass through unchanged. Falls
+ * back to the original value if Cloudinary isn't configured or the upload
+ * fails, so signup never breaks over an optional image.
+ */
+export async function resolveHostedImage(
+  value: string | null | undefined,
+  folder: string,
+): Promise<string | undefined> {
+  if (!value) return undefined;
+  const match = DATA_URL_RE.exec(value);
+  if (!match) return value;
+
+  try {
+    const buffer = Buffer.from(match[2], "base64");
+    const uploaded = await uploadImageBuffer(buffer, folder);
+    return uploaded.url;
+  } catch (err) {
+    console.error(
+      "[resolveHostedImage] Cloudinary upload failed, keeping inline data URL",
+      err,
+    );
+    return value;
+  }
+}

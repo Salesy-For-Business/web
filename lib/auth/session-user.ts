@@ -31,6 +31,7 @@ export function toPublicBusiness(doc: BusinessLike): AuthBusiness {
     businessPhone: doc.businessPhone,
     websiteUrl: doc.websiteUrl || undefined,
     logoDataUrl: doc.logoDataUrl || undefined,
+    socialImageUrl: doc.socialImageUrl || undefined,
     hasPhysicalAddress: doc.hasPhysicalAddress,
     street: doc.street || undefined,
     city: doc.city || undefined,

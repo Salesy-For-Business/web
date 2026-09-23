@@ -33,6 +33,9 @@ export type Storefront = {
   description: string;
   /** Data URL or path; null → initials avatar */
   logoDataUrl: string | null;
+  /** Optional dedicated og:image / twitter:image. Falls back to the logo,
+   * then the first product image, via `resolveStoreOgImage`. */
+  socialImageUrl: string | null;
   /** Brand accent for header chip / logo fallback */
   brandColor: string;
   contact: StoreContact;
@@ -55,6 +58,7 @@ export const DEMO_STORE: Storefront = {
   description:
     "Small-batch crafts made for everyday use. Free Lagos Island pickup on orders over ₦50,000.",
   logoDataUrl: DEMO_LOGO_DATA_URL,
+  socialImageUrl: null,
   brandColor: "#0F766E",
   contact: {
     whatsapp: "2348012345678",
@@ -241,6 +245,35 @@ export function storePath(handle: string, path = "") {
 
 export function productHref(handle: string, slug: string) {
   return storePath(handle, `/products/${slug}`);
+}
+
+/** Public site origin, no trailing slash. Used to build absolute URLs for
+ * canonical links and og:url / og:image outside of `metadataBase`. */
+export function appOrigin() {
+  return (
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+    "http://localhost:3000"
+  );
+}
+
+export function absoluteStoreUrl(handle: string, path = "") {
+  return `${appOrigin()}${storePath(handle, path)}`;
+}
+
+/**
+ * Priority for a store's social-share image (og:image / twitter:image):
+ * 1. The seller's dedicated social image, if set.
+ * 2. The store logo.
+ * 3. The first product's first photo.
+ * Returns `null` when the store has none of the above — callers should
+ * omit the `images` field rather than pass a broken URL.
+ */
+export function resolveStoreOgImage(store: Storefront): string | null {
+  if (store.socialImageUrl) return store.socialImageUrl;
+  if (store.logoDataUrl) return store.logoDataUrl;
+  const firstProductImage = store.products.find((p) => p.images?.length)
+    ?.images?.[0];
+  return firstProductImage ?? null;
 }
 
 export { formatNaira };

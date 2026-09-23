@@ -16,6 +16,9 @@ export interface IBusiness {
   businessPhone: string;
   websiteUrl: string;
   logoDataUrl?: string;
+  /** Optional dedicated image for og:image / twitter:image. Falls back to
+   * the logo, then the store's first product image, when unset. */
+  socialImageUrl?: string;
   hasPhysicalAddress: boolean;
   street?: string;
   city?: string;
@@ -51,6 +54,7 @@ const businessSchema = new Schema<IBusiness>(
     businessPhone: { type: String, required: true, trim: true },
     websiteUrl: { type: String, trim: true, default: "" },
     logoDataUrl: { type: String },
+    socialImageUrl: { type: String },
     hasPhysicalAddress: { type: Boolean, default: false },
     street: { type: String, trim: true },
     city: { type: String, trim: true },

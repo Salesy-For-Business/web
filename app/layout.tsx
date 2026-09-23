@@ -28,10 +28,32 @@ const robotoMono = Roboto_Mono({
   display: "swap",
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const SITE_NAME = "Salesy";
+const SITE_DESCRIPTION =
+  "Salesy is an ecommerce platform for entrepreneurs to create online stores with a shareable unique URL.";
+
 export const metadata: Metadata = {
-  title: "Salesy — Create an online store",
-  description:
-    "Salesy is an ecommerce platform for entrepreneurs to create online stores with a shareable unique URL.",
+  // Lets every page (including per-store metadata) resolve relative
+  // og:image / canonical URLs against the real deployed origin.
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: "Salesy — Create an online store",
+    template: `%s — ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: "Salesy — Create an online store",
+    description: SITE_DESCRIPTION,
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Salesy — Create an online store",
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

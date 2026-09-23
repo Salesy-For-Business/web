@@ -38,6 +38,9 @@ export type AuthBusiness = {
   businessEmail: string;
   businessPhone: string;
   logoDataUrl?: string;
+  /** Dedicated og:image / twitter:image for social sharing. Falls back to
+   * the logo, then the store's first product image, when unset. */
+  socialImageUrl?: string;
   hasPhysicalAddress: boolean;
   street?: string;
   city?: string;

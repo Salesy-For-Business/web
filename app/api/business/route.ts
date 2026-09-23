@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth/session-user";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { businessSchema } from "@/lib/auth-schemas";
+import { resolveHostedImage } from "@/lib/cloudinary";
 
 export async function POST(request: Request) {
   try {
@@ -56,12 +57,20 @@ export async function POST(request: Request) {
       ? user.phone
       : (values.businessPhone as string);
 
+    // Inline `data:` URLs (logo / social image dropzones) aren't fetchable
+    // by social crawlers as og:image, so hoist them to Cloudinary now.
+    const [logoDataUrl, socialImageUrl] = await Promise.all([
+      resolveHostedImage(values.logoDataUrl, "logos"),
+      resolveHostedImage(values.socialImageUrl, "social"),
+    ]);
+
     const business = await Business.create({
       userId: user._id,
       businessName: values.businessName.trim(),
       businessEmail,
       businessPhone,
-      logoDataUrl: values.logoDataUrl,
+      logoDataUrl,
+      socialImageUrl,
       hasPhysicalAddress: values.hasPhysicalAddress,
       street: values.hasPhysicalAddress ? values.street : undefined,
       city: values.hasPhysicalAddress ? values.city : undefined,

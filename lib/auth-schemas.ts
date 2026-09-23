@@ -125,6 +125,7 @@ export const businessSchema = z
     usePersonalPhone: z.boolean(),
     businessPhone: z.string().trim().optional(),
     logoDataUrl: z.string().optional(),
+    socialImageUrl: z.string().optional(),
     hasPhysicalAddress: z.boolean(),
     street: z.string().trim().optional(),
     city: z.string().trim().optional(),
