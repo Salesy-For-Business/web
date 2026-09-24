@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import SignupPageClient from "./signup-form";
 
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function SignupPage() {
-  return <SignupPageClient />;
+  return (
+    <Suspense>
+      <SignupPageClient />
+    </Suspense>
+  );
 }

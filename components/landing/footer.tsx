@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { HomeHashLink } from "@/components/landing/home-hash-link";
 import { AccountNavLink } from "@/components/landing/account-nav-link";
+import { Logo } from "@/components/logo";
 
 const productLinks = [
   { hash: "features", label: "Features" },
@@ -20,11 +21,8 @@ export default function Footer() {
     <footer className="border-t border-border bg-background px-6 py-16 sm:px-10 lg:px-16">
       <div className="mx-auto flex max-w-6xl flex-col gap-12 lg:flex-row lg:justify-between">
         <div className="max-w-xs">
-          <Link
-            href="/"
-            className="font-display text-[22px] tracking-tight text-heading hover:text-heading"
-          >
-            Salesy
+          <Link href="/" className="hover:opacity-90">
+            <Logo />
           </Link>
           <p className="mt-3 text-[14px] leading-6 text-muted">
             An online store with a unique, shareable URL — built for how you

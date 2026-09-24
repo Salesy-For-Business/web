@@ -61,6 +61,24 @@ export function useHandleAvailability(handle: string, enabled: boolean) {
   });
 }
 
+/** The name/email Google verified for a signup in progress — read back
+ * after the OAuth redirect so the form can prefill and finish collecting
+ * the phone number. 404s once expired or if there's nothing pending. */
+export function useGooglePendingQuery(enabled: boolean) {
+  return useQuery({
+    queryKey: ["auth", "google-pending"],
+    queryFn: async () => {
+      const { data } = await api.get<
+        ApiOk<{ firstName: string; lastName: string; email: string }>
+      >("/auth/google/pending");
+      return data;
+    },
+    enabled,
+    retry: false,
+    staleTime: Infinity,
+  });
+}
+
 export function useSignupMutation() {
   const qc = useQueryClient();
   return useMutation({

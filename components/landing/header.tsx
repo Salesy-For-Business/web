@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronDown, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Logo } from "@/components/logo";
 import { HomeHashLink } from "@/components/landing/home-hash-link";
 import { AccountNavLink } from "@/components/landing/account-nav-link";
 
@@ -55,11 +56,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-sm">
       <div className="flex items-center justify-between px-6 py-5 sm:px-10 lg:px-16">
-        <Link
-          href="/"
-          className="font-display text-[22px] tracking-tight text-heading hover:text-heading"
-        >
-          Salesy
+        <Link href="/" className="hover:opacity-90">
+          <Logo />
         </Link>
 
         <nav className="hidden items-center gap-10 lg:flex">

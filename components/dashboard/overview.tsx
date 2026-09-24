@@ -137,7 +137,10 @@ export function OverviewPage() {
   };
   const trajectory = data?.revenueTrajectory ?? [];
   const topProducts = data?.topProducts ?? [];
-  const recentOrders = data?.recentOrders ?? [];
+  const recentOrders = useMemo(
+    () => data?.recentOrders ?? [],
+    [data?.recentOrders],
+  );
 
   const channelBreakdown = useMemo(() => {
     const paid = recentOrders.filter((o) => o.status === "Paid");

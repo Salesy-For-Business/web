@@ -73,9 +73,7 @@ export function DashboardHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
           >
             <Bell className="size-4" />
           </button>
-          <div className="hidden sm:block">
-            <ThemeToggle />
-          </div>
+          <ThemeToggle />
         </div>
       </div>
     </header>

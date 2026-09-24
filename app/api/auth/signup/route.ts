@@ -5,6 +5,10 @@ import {
   createSessionToken,
   setSessionCookie,
 } from "@/lib/auth/session";
+import {
+  clearGooglePendingCookie,
+  readGooglePendingCookie,
+} from "@/lib/auth/google";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { profileSchema } from "@/lib/auth-schemas";
 
@@ -20,7 +24,27 @@ export async function POST(request: Request) {
 
     const values = parsed.data;
     await connectDb();
-    const email = values.email.trim().toLowerCase();
+    let email = values.email.trim().toLowerCase();
+    let firstName = values.firstName.trim();
+    let lastName = values.lastName.trim();
+
+    if (values.provider === "google") {
+      // Never trust a client-asserted "google" provider for identity —
+      // re-check against the signed profile our own OAuth callback stashed
+      // after actually verifying it with Google. Anyone could otherwise
+      // POST { provider: "google", email: "someone-else@x.com" } here and
+      // get an "emailVerified" account for an address they don't own.
+      const pending = await readGooglePendingCookie();
+      if (!pending || pending.email !== email) {
+        return jsonError(
+          "Your Google sign-in expired. Continue with Google again.",
+          401,
+        );
+      }
+      email = pending.email;
+      firstName = pending.firstName;
+      lastName = pending.lastName;
+    }
 
     const existing = await User.findOne({ email });
     if (existing?.emailVerified) {
@@ -38,8 +62,8 @@ export async function POST(request: Request) {
     let userId: string;
 
     if (existing) {
-      existing.firstName = values.firstName.trim();
-      existing.lastName = values.lastName.trim();
+      existing.firstName = firstName;
+      existing.lastName = lastName;
       existing.phone = values.phone;
       existing.passwordHash = passwordHash;
       existing.provider = values.provider;
@@ -48,8 +72,8 @@ export async function POST(request: Request) {
       userId = String(existing._id);
     } else {
       const user = await User.create({
-        firstName: values.firstName.trim(),
-        lastName: values.lastName.trim(),
+        firstName,
+        lastName,
         email,
         phone: values.phone,
         passwordHash,
@@ -60,13 +84,14 @@ export async function POST(request: Request) {
     }
 
     if (values.provider === "google") {
+      await clearGooglePendingCookie();
       const token = await createSessionToken({ sub: userId, email });
       await setSessionCookie(token);
       return jsonOk({
         next: "pendingBusiness" as const,
         user: {
-          firstName: values.firstName.trim(),
-          lastName: values.lastName.trim(),
+          firstName,
+          lastName,
           email,
           phone: values.phone,
           provider: "google" as const,

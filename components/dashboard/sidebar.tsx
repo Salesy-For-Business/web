@@ -19,6 +19,7 @@ import {
   planLabel,
   useAuthStore,
 } from "@/lib/auth-store";
+import { Logo } from "@/components/logo";
 
 export function DashboardSidebar({
   open,
@@ -47,10 +48,10 @@ export function DashboardSidebar({
       <div className="flex items-center justify-between px-5 py-5">
         <Link
           href="/dashboard"
-          className="font-display text-[22px] tracking-tight text-heading hover:text-heading"
+          className="hover:opacity-90"
           onClick={onClose}
         >
-          Salesy
+          <Logo />
         </Link>
         {onClose ? (
           <button
@@ -135,7 +136,7 @@ export function DashboardSidebar({
               className={clsx(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium",
                 active
-                  ? "bg-tonal text-link"
+                  ? "bg-tonal text-link dark:text-white dark:bg-primary"
                   : "text-heading hover:bg-surface hover:text-heading",
               )}
             >

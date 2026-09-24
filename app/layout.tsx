@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Google_Sans, Google_Sans_Flex, Roboto_Mono } from "next/font/google";
 import { AuthSessionSync } from "@/components/auth/auth-session-sync";
 import { InlineScript } from "@/components/inline-script";
@@ -54,6 +54,15 @@ export const metadata: Metadata = {
     title: "Salesy — Create an online store",
     description: SITE_DESCRIPTION,
   },
+};
+
+// Tints the browser chrome / PWA splash screen with the brand blue —
+// Deep Blue on dark, so it doesn't glare against the dark UI.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#0B63F6" },
+    { media: "(prefers-color-scheme: dark)", color: "#082B66" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Store } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 /**
  * Shown when `/{storeHandle}` does not match a store (or the store was removed).
@@ -9,11 +10,8 @@ export function StorefrontMissing({ handle }: { handle?: string }) {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-background">
       <header className="border-b border-border px-6 py-5 sm:px-10">
-        <Link
-          href="/"
-          className="font-display text-[22px] tracking-tight text-heading hover:text-heading"
-        >
-          Salesy
+        <Link href="/" className="hover:opacity-90">
+          <Logo />
         </Link>
       </header>
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center px-6 py-20 text-center">

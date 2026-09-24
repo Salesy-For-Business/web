@@ -107,12 +107,6 @@ type AuthState = {
     email: string,
     password: string,
   ) => { ok: true; next: AuthStatus } | { ok: false; error: string };
-  signInGoogle: () => { ok: true; next: AuthStatus };
-  beginGoogleSignup: () => {
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
   requestReset: (
     email: string,
   ) => { ok: true } | { ok: false; error: string };
@@ -138,11 +132,24 @@ type AuthState = {
   clearOtpFlow: () => void;
 };
 
-export const MOCK_GOOGLE = {
-  firstName: "Adaeze",
-  lastName: "Okonkwo",
-  email: "adaeze.okonkwo@gmail.com",
-};
+/** Maps a `?error=` code from the Google OAuth redirect to user-facing copy.
+ * See `app/api/auth/google/callback/route.ts` for where these are set. */
+export function googleErrorMessage(code: string | null): string | null {
+  switch (code) {
+    case "google-cancelled":
+      return "Google sign-in was cancelled.";
+    case "google-no-account":
+      return "No Salesy account uses that Google email yet. Create a store first.";
+    case "google-wrong-provider":
+      return "That email already has a Salesy account with a password. Sign in with email instead.";
+    case "google-unavailable":
+      return "Google sign-in isn't available right now.";
+    case "google-failed":
+      return "Google sign-in failed. Try again.";
+    default:
+      return null;
+  }
+}
 
 export function delayMs(ms = 700) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -323,40 +330,6 @@ export const useAuthStore = create<AuthState>()(
         set({ status: "signedIn" });
         return { ok: true, next: "signedIn" };
       },
-
-      signInGoogle: () => {
-        const { user, business } = get();
-        const googleEmail = MOCK_GOOGLE.email.toLowerCase();
-
-        if (user?.email === googleEmail && user.provider === "google") {
-          if (!business) {
-            set({ status: "pendingBusiness" });
-            return { ok: true, next: "pendingBusiness" };
-          }
-          set({ status: "signedIn" });
-          return { ok: true, next: "signedIn" };
-        }
-
-        set({
-          status: "pendingBusiness",
-          user: {
-            firstName: MOCK_GOOGLE.firstName,
-            lastName: MOCK_GOOGLE.lastName,
-            email: googleEmail,
-            phone: "",
-            password: null,
-            provider: "google",
-            emailVerified: true,
-          },
-          business: null,
-          otpPurpose: null,
-          resetReady: false,
-          resetEmail: null,
-        });
-        return { ok: true, next: "pendingBusiness" };
-      },
-
-      beginGoogleSignup: () => MOCK_GOOGLE,
 
       requestReset: (email) => {
         const { user } = get();

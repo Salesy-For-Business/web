@@ -13,6 +13,7 @@ import {
   secondaryButtonClass,
 } from "@/components/auth/styles";
 import { PayoutPinSetup } from "@/components/dashboard/payout-pin";
+import { SearchableSelect } from "@/components/searchable-select";
 import { formatNaira } from "@/lib/dashboard";
 import type { Bank } from "@/lib/banks";
 import {
@@ -39,7 +40,6 @@ export function WithdrawForm({
   const [banks, setBanks] = useState<Bank[]>([]);
   const [banksLoading, setBanksLoading] = useState(true);
   const [banksError, setBanksError] = useState<string | null>(null);
-  const [bankQuery, setBankQuery] = useState("");
   const [bankCode, setBankCode] = useState("");
   const [account, setAccount] = useState("");
   const [amount, setAmount] = useState("");
@@ -74,11 +74,6 @@ export function WithdrawForm({
   }, []);
 
   const selectedBank = banks.find((b) => b.code === bankCode);
-  const filteredBanks = bankQuery.trim()
-    ? banks.filter((b) =>
-        b.name.toLowerCase().includes(bankQuery.trim().toLowerCase()),
-      )
-    : banks;
 
   useEffect(() => {
     const digits = account.replace(/\D/g, "");
@@ -196,49 +191,23 @@ export function WithdrawForm({
           />
         </div>
 
-        <div>
-          <label htmlFor="bank-search" className={fieldLabelClass}>
-            Bank
-          </label>
-          <input
-            id="bank-search"
-            className={inputClass}
-            placeholder="Search banks…"
-            value={bankQuery}
-            onChange={(e) => setBankQuery(e.target.value)}
-            disabled={banksLoading}
-            autoComplete="off"
-          />
-          <select
-            id="bank"
-            className={clsx(inputClass, "mt-2")}
-            value={bankCode}
-            onChange={(e) => {
-              setBankCode(e.target.value);
-              setResolve({ status: "idle" });
-            }}
-            disabled={banksLoading || !!banksError}
-            aria-label="Select bank"
-          >
-            <option value="">
-              {banksLoading ? "Loading banks…" : "Select a bank"}
-            </option>
-            {filteredBanks.map((bank) => (
-              <option key={bank.code} value={bank.code}>
-                {bank.name}
-              </option>
-            ))}
-          </select>
-          {banksError ? (
-            <p className={fieldErrorClass} role="alert">
-              {banksError}
-            </p>
-          ) : (
-            <p className={fieldHintClass}>
-              Banks load from our supported payouts list.
-            </p>
-          )}
-        </div>
+        <SearchableSelect
+          id="bank"
+          label="Bank"
+          options={banks.map((bank) => ({ value: bank.code, label: bank.name }))}
+          value={bankCode}
+          onChange={(next) => {
+            setBankCode(next);
+            setResolve({ status: "idle" });
+          }}
+          placeholder="Select a bank"
+          searchPlaceholder="Search banks… e.g. Opay, Firstbank"
+          loading={banksLoading}
+          loadingMessage="Loading banks…"
+          disabled={!!banksError}
+          error={banksError ?? undefined}
+          hint={banksError ? undefined : "Banks load from our supported payouts list."}
+        />
 
         <div>
           <label htmlFor="account" className={fieldLabelClass}>

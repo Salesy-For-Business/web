@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Logo } from "@/components/logo";
 
 export function AuthShell({
   title,
@@ -17,11 +18,8 @@ export function AuthShell({
   return (
     <div className="flex min-h-full flex-1 flex-col bg-background">
       <header className="flex items-center justify-between px-6 py-5 sm:px-10 sticky top-0 z-50 bg-background/80 backdrop-blur-sm">
-        <Link
-          href="/"
-          className="font-display text-[22px] tracking-tight text-heading hover:text-heading"
-        >
-          Salesy
+        <Link href="/" className="hover:opacity-90">
+          <Logo />
         </Link>
         <ThemeToggle />
       </header>

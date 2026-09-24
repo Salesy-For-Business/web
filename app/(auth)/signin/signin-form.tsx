@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -17,13 +17,17 @@ import {
 } from "@/components/auth";
 import { getApiError, useSignInMutation } from "@/lib/auth/queries";
 import { signInSchema, type SignInValues } from "@/lib/auth-schemas";
-import { delayMs, useAuthStore } from "@/lib/auth-store";
+import { googleErrorMessage } from "@/lib/auth-store";
 
 function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const signIn = useSignInMutation();
-  const signInGoogle = useAuthStore((s) => s.signInGoogle);
-  const [googleLoading, setGoogleLoading] = useState(false);
+
+  useEffect(() => {
+    const message = googleErrorMessage(searchParams.get("error"));
+    if (message) toast.error(message);
+  }, [searchParams]);
 
   const {
     register,
@@ -52,13 +56,11 @@ function SignInForm() {
     }
   }
 
-  async function onGoogle() {
-    setGoogleLoading(true);
-    await delayMs();
-    const result = signInGoogle();
-    setGoogleLoading(false);
-    toast.success("Signed in");
-    routeFor(result.next);
+  function onGoogle() {
+    // Full top-level navigation — Google's consent screen isn't reachable
+    // via fetch/XHR. The OAuth callback signs the user in server-side and
+    // redirects straight to /dashboard (or back here with ?error=...).
+    window.location.href = "/api/auth/google/start?intent=signin";
   }
 
   return (
@@ -76,9 +78,8 @@ function SignInForm() {
     >
       <GoogleButton
         label="Continue with Google"
-        loading={googleLoading}
         disabled={loading}
-        onClick={() => void onGoogle()}
+        onClick={onGoogle}
       />
       <AuthDivider />
       <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>

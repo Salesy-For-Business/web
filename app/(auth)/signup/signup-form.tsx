@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -19,17 +19,20 @@ import {
 } from "@/components/auth";
 import {
   getApiError,
+  useGooglePendingQuery,
   useSignupMutation,
 } from "@/lib/auth/queries";
 import { profileSchema, type ProfileValues } from "@/lib/auth-schemas";
-import { delayMs, MOCK_GOOGLE, useAuthStore } from "@/lib/auth-store";
+import { googleErrorMessage } from "@/lib/auth-store";
 import { fieldErrorClass } from "@/components/auth/styles";
 
 function SignupProfileForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const signup = useSignupMutation();
-  const beginGoogleSignup = useAuthStore((s) => s.beginGoogleSignup);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const googlePending = useGooglePendingQuery(
+    searchParams.get("google") === "1",
+  );
 
   const {
     register,
@@ -54,24 +57,43 @@ function SignupProfileForm() {
   });
 
   const provider = watch("provider");
+  const firstName = watch("firstName");
+  const lastName = watch("lastName");
   const googleMode = provider === "google";
   const loading = isSubmitting || signup.isPending;
 
-  async function onGoogle() {
-    setGoogleLoading(true);
-    await delayMs(400);
-    const profile = beginGoogleSignup();
+  useEffect(() => {
+    const message = googleErrorMessage(searchParams.get("error"));
+    if (message) toast.error(message);
+  }, [searchParams]);
+
+  // Google verified this identity server-side before redirecting back here
+  // with ?google=1 — prefill and lock name/email, still collect phone.
+  useEffect(() => {
+    if (!googlePending.data) return;
     reset({
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      email: profile.email,
+      firstName: googlePending.data.firstName,
+      lastName: googlePending.data.lastName,
+      email: googlePending.data.email,
       phone: "",
       provider: "google",
       password: "",
       confirmPassword: "",
       acceptTerms: false,
     });
-    setGoogleLoading(false);
+  }, [googlePending.data, reset]);
+
+  useEffect(() => {
+    if (googlePending.isError) {
+      toast.error("Your Google sign-in expired. Continue with Google again.");
+    }
+  }, [googlePending.isError]);
+
+  function onGoogle() {
+    // Full top-level navigation — Google's consent screen isn't reachable
+    // via fetch/XHR. The callback redirects back here with ?google=1 once
+    // it has verified the identity.
+    window.location.href = "/api/auth/google/start?intent=signup";
   }
 
   async function onSubmit(values: ProfileValues) {
@@ -108,9 +130,9 @@ function SignupProfileForm() {
         <>
           <GoogleButton
             label="Continue with Google"
-            loading={googleLoading}
+            loading={googlePending.isFetching}
             disabled={loading}
-            onClick={() => void onGoogle()}
+            onClick={onGoogle}
           />
           <AuthDivider />
         </>
@@ -118,7 +140,7 @@ function SignupProfileForm() {
         <p className="mb-6 rounded-lg border border-border bg-surface px-4 py-3 text-[14px] text-muted">
           Continuing as{" "}
           <span className="font-medium text-heading">
-            {MOCK_GOOGLE.firstName} {MOCK_GOOGLE.lastName}
+            {firstName} {lastName}
           </span>{" "}
           via Google. Add your phone to finish this step.
         </p>
@@ -232,6 +254,7 @@ function SignupProfileForm() {
               setValue("password", "");
               setValue("confirmPassword", "");
               setValue("acceptTerms", false);
+              router.replace("/signup");
             }}
           >
             Use email instead
