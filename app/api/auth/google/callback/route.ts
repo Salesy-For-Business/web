@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const profile = await fetchGoogleProfile(code);
+    const profile = await fetchGoogleProfile(code, request.nextUrl.origin);
     await connectDb();
     const existing = await User.findOne({ email: profile.email });
 

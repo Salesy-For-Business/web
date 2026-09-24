@@ -16,17 +16,20 @@ export type GoogleProfile = {
   lastName: string;
 };
 
-function appUrl() {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-    "http://localhost:3000"
-  );
-}
-
-export function googleRedirectUri() {
-  return (
-    process.env.GOOGLE_REDIRECT_URI || `${appUrl()}/api/auth/google/callback`
-  );
+/**
+ * Google requires the `redirect_uri` sent in the auth request to exactly
+ * match one of the "Authorized redirect URIs" registered for the OAuth
+ * client — not just the domain, the full path. It's built from the actual
+ * request's origin (not NEXT_PUBLIC_APP_URL, which points at the canonical
+ * production domain) so it round-trips to whichever environment initiated
+ * sign-in — the same bug class as the Paystack callback URL. Register both
+ * `http://localhost:3000/api/auth/google/callback` and
+ * `https://salesy.link/api/auth/google/callback` (or your prod domain) in
+ * Google Cloud Console, under Authorized redirect URIs specifically —
+ * Authorized JavaScript origins is a different field and doesn't count.
+ */
+export function googleRedirectUri(origin: string) {
+  return process.env.GOOGLE_REDIRECT_URI || `${origin}/api/auth/google/callback`;
 }
 
 export function isGoogleConfigured() {
@@ -48,14 +51,14 @@ function secretKey() {
  * CSRF `state` value the caller must stash in a cookie (`setGoogleStateCookie`)
  * and compare against on the way back.
  */
-export function buildGoogleAuthUrl(intent: GoogleIntent) {
+export function buildGoogleAuthUrl(intent: GoogleIntent, origin: string) {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (!clientId) throw new Error("GOOGLE_CLIENT_ID is not configured");
 
   const state = `${intent}.${crypto.randomUUID()}`;
   const params = new URLSearchParams({
     client_id: clientId,
-    redirect_uri: googleRedirectUri(),
+    redirect_uri: googleRedirectUri(origin),
     response_type: "code",
     scope: "openid email profile",
     state,
@@ -93,7 +96,10 @@ export async function consumeGoogleStateCookie(): Promise<string | null> {
  * proof of identity, so there's no need to verify an id_token signature
  * separately.
  */
-export async function fetchGoogleProfile(code: string): Promise<GoogleProfile> {
+export async function fetchGoogleProfile(
+  code: string,
+  origin: string,
+): Promise<GoogleProfile> {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
@@ -107,7 +113,10 @@ export async function fetchGoogleProfile(code: string): Promise<GoogleProfile> {
       code,
       client_id: clientId,
       client_secret: clientSecret,
-      redirect_uri: googleRedirectUri(),
+      // Google checks this against the redirect_uri the code was issued
+      // for — it must be byte-identical to the one used in the auth
+      // request, hence deriving from the same request origin again here.
+      redirect_uri: googleRedirectUri(origin),
       grant_type: "authorization_code",
     }),
   });

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const { url, state } = buildGoogleAuthUrl(intent);
+  const { url, state } = buildGoogleAuthUrl(intent, request.nextUrl.origin);
   await setGoogleStateCookie(state);
   return Response.redirect(url);
 }

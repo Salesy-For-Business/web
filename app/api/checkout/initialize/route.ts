@@ -91,9 +91,14 @@ export async function POST(request: Request) {
       channel: values.method,
     });
 
-    const appUrl =
-      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
-      "http://localhost:3000";
+    // Derive from the incoming request, not NEXT_PUBLIC_APP_URL: that env
+    // var points at the canonical public domain, but a Paystack callback
+    // must round-trip to whichever environment actually started checkout
+    // (localhost in dev, a preview deploy, production). Hardcoding it here
+    // sent local test-mode payments back to production, whose verify call
+    // then used the live secret key against a test-mode reference — which
+    // Paystack correctly reports as "Transaction reference not found".
+    const appUrl = new URL(request.url).origin;
     const callbackUrl = `${appUrl}/${handle}/checkout/success?reference=${encodeURIComponent(reference)}`;
 
     const init = await initializeTransaction({
