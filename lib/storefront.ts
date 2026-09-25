@@ -186,6 +186,8 @@ export const RESERVED_STORE_HANDLES = new Set([
   "forgot-password",
   "reset-password",
   "blog",
+  "privacy",
+  "terms",
   "_next",
   "favicon.ico",
 ]);
