@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, Minus, Plus } from "lucide-react";
 import clsx from "clsx";
-import { ProductImage } from "@/components/storefront/product-grid";
+import { ProductGallery } from "@/components/storefront/product-gallery";
 import { useStorefront } from "@/components/storefront/store-context";
 import {
   primaryButtonClass,
@@ -49,7 +49,7 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
 
   return (
     <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-      <ProductImage product={product} className="lg:sticky lg:top-24" />
+      <ProductGallery product={product} className="lg:sticky lg:top-24" />
       <div>
         <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-muted">
           {product.category}

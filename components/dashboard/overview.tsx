@@ -452,7 +452,7 @@ export function OverviewPage() {
               {recentOrders.slice(0, 6).map((tx) => (
                 <li
                   key={tx.id}
-                  className="flex items-start justify-between gap-3 py-3 first:pt-0 last:pb-0"
+                  className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:justify-between sm:gap-3"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-[14px] font-medium text-heading">
@@ -465,13 +465,13 @@ export function OverviewPage() {
                       {formatOrderDate(tx.date)}
                     </p>
                   </div>
-                  <div className="shrink-0 text-right">
+                  <div className="flex items-center justify-between gap-3 sm:block sm:shrink-0 sm:text-right">
                     <p className="font-[system-ui] text-[14px] font-medium text-heading">
                       {formatNaira(tx.amount)}
                     </p>
                     <p
                       className={clsx(
-                        "mt-1 text-[12px] font-medium",
+                        "text-[12px] font-medium sm:mt-1",
                         tx.status === "Paid" &&
                           "text-green-700 dark:text-green-500",
                         tx.status === "Pending" &&

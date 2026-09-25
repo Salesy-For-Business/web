@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
@@ -9,6 +9,7 @@ import { ImagePlus, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   fieldErrorClass,
+  fieldHintClass,
   fieldLabelClass,
   inputClass,
   primaryButtonClass,
@@ -30,18 +31,40 @@ type ProductFormProps = {
   product?: PublicProduct;
 };
 
+type PendingImage = { id: string; file: File; previewUrl: string };
+
+const MAX_IMAGES = 8;
+
 export function ProductForm({ mode, product }: ProductFormProps) {
   const router = useRouter();
   const create = useCreateProductMutation();
   const update = useUpdateProductMutation(product?.id ?? "");
-  const [uploading, setUploading] = useState(false);
+
+  // Already-uploaded Cloudinary URLs (existing photos on an edit) vs. files
+  // picked in this session that haven't been uploaded yet — selecting
+  // photos should feel instant, so we only touch Cloudinary once, at
+  // final submit, uploading everything in parallel.
+  const [existingImages, setExistingImages] = useState<string[]>(
+    product?.images ?? [],
+  );
+  const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
+  const pendingImagesRef = useRef(pendingImages);
+  useEffect(() => {
+    pendingImagesRef.current = pendingImages;
+  }, [pendingImages]);
+
+  // Revoke any local preview URLs left over if the form unmounts without
+  // submitting (e.g. the user clicks Cancel).
+  useEffect(() => {
+    return () => {
+      pendingImagesRef.current.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+    };
+  }, []);
 
   const {
     register,
     handleSubmit,
     control,
-    setValue,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<ProductValues>({
     resolver: zodResolver(productSchema) as never,
@@ -59,36 +82,55 @@ export function ProductForm({ mode, product }: ProductFormProps) {
     },
   });
 
-  const images = watch("images") ?? [];
+  const totalImageCount = existingImages.length + pendingImages.length;
   const loading = isSubmitting || create.isPending || update.isPending;
 
-  async function onUpload(files: FileList | null) {
+  function onSelectFiles(files: FileList | null) {
     if (!files?.length) return;
-    setUploading(true);
-    try {
-      const next = [...images];
-      for (const file of Array.from(files).slice(0, 8 - next.length)) {
-        const uploaded = await uploadProductImage(file);
-        next.push(uploaded.url);
-      }
-      setValue("images", next, { shouldValidate: true });
-      toast.success("Image uploaded");
-    } catch (err) {
-      toast.error(getApiError(err, "Could not upload image."));
-    } finally {
-      setUploading(false);
-    }
+    const room = MAX_IMAGES - totalImageCount;
+    if (room <= 0) return;
+    const next = Array.from(files)
+      .slice(0, room)
+      .map((file) => ({
+        id: crypto.randomUUID(),
+        file,
+        previewUrl: URL.createObjectURL(file),
+      }));
+    setPendingImages((prev) => [...prev, ...next]);
+  }
+
+  function removeExistingImage(url: string) {
+    setExistingImages((prev) => prev.filter((u) => u !== url));
+  }
+
+  function removePendingImage(id: string) {
+    setPendingImages((prev) => {
+      const match = prev.find((p) => p.id === id);
+      if (match) URL.revokeObjectURL(match.previewUrl);
+      return prev.filter((p) => p.id !== id);
+    });
   }
 
   async function onSubmit(values: ProductValues) {
     try {
+      // The only slow step: upload every newly picked photo to Cloudinary
+      // now, in parallel, right before saving — not as each one is picked.
+      const uploaded = pendingImages.length
+        ? await Promise.all(pendingImages.map((p) => uploadProductImage(p.file)))
+        : [];
+      const payload: ProductValues = {
+        ...values,
+        images: [...existingImages, ...uploaded.map((u) => u.url)],
+      };
+
       if (mode === "create") {
-        await create.mutateAsync(values);
+        await create.mutateAsync(payload);
         toast.success("Product created");
       } else if (product) {
-        await update.mutateAsync(values);
+        await update.mutateAsync(payload);
         toast.success("Product updated");
       }
+      pendingImages.forEach((p) => URL.revokeObjectURL(p.previewUrl));
       router.push("/dashboard/products");
       router.refresh();
     } catch (err) {
@@ -173,7 +215,7 @@ export function ProductForm({ mode, product }: ProductFormProps) {
       <div>
         <p className={fieldLabelClass}>Photos</p>
         <div className="flex flex-wrap gap-3">
-          {images.map((url) => (
+          {existingImages.map((url) => (
             <div
               key={url}
               className="relative size-24 overflow-hidden rounded-lg border border-border"
@@ -183,38 +225,57 @@ export function ProductForm({ mode, product }: ProductFormProps) {
               <button
                 type="button"
                 className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white"
-                onClick={() =>
-                  setValue(
-                    "images",
-                    images.filter((u) => u !== url),
-                    { shouldValidate: true },
-                  )
-                }
+                onClick={() => removeExistingImage(url)}
                 aria-label="Remove image"
+                disabled={loading}
               >
                 <X className="size-3.5" />
               </button>
             </div>
           ))}
-          {images.length < 8 ? (
+          {pendingImages.map((p) => (
+            <div
+              key={p.id}
+              className="relative size-24 overflow-hidden rounded-lg border border-border"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={p.previewUrl} alt="" className="size-full object-cover" />
+              <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                New
+              </span>
+              <button
+                type="button"
+                className="absolute top-1 right-1 rounded-full bg-black/60 p-1 text-white"
+                onClick={() => removePendingImage(p.id)}
+                aria-label="Remove image"
+                disabled={loading}
+              >
+                <X className="size-3.5" />
+              </button>
+            </div>
+          ))}
+          {totalImageCount < MAX_IMAGES ? (
             <label className="flex size-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border bg-surface text-muted hover:border-primary hover:text-link">
-              {uploading ? (
-                <Loader2 className="size-5 animate-spin" />
-              ) : (
-                <ImagePlus className="size-5" />
-              )}
-              <span className="text-[11px]">Upload</span>
+              <ImagePlus className="size-5" />
+              <span className="text-[11px]">Add photo</span>
               <input
                 type="file"
                 accept="image/*"
                 multiple
                 className="sr-only"
-                disabled={uploading}
-                onChange={(e) => void onUpload(e.target.files)}
+                disabled={loading}
+                onChange={(e) => {
+                  onSelectFiles(e.target.files);
+                  e.target.value = "";
+                }}
               />
             </label>
           ) : null}
         </div>
+        <p className={fieldHintClass}>
+          Photos upload when you save the product, not right away — pick as
+          many as you like first.
+        </p>
         {errors.images ? (
           <p className={fieldErrorClass}>{errors.images.message}</p>
         ) : null}
@@ -256,10 +317,18 @@ export function ProductForm({ mode, product }: ProductFormProps) {
         </div>
       </div>
 
+      {loading && pendingImages.length > 0 ? (
+        <p className={fieldHintClass} aria-live="polite">
+          Processing {pendingImages.length}{" "}
+          {pendingImages.length === 1 ? "photo" : "photos"} — this can take up
+          to 45 seconds. Please stay on this page.
+        </p>
+      ) : null}
+
       <div className="flex flex-wrap gap-3 pt-2">
         <button
           type="submit"
-          disabled={loading || uploading}
+          disabled={loading}
           className={clsx(primaryButtonClass, "w-auto px-6")}
         >
           {loading ? <Loader2 className="size-4 animate-spin" /> : null}
