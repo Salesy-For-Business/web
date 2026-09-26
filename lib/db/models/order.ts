@@ -6,6 +6,7 @@ import {
   type HydratedDocument,
   type Model,
 } from "mongoose";
+import type { BusinessCurrency } from "@/lib/currencies";
 
 export type OrderStatus = "pending" | "paid" | "failed";
 export type OrderChannel = "card" | "transfer" | "ussd";
@@ -34,6 +35,15 @@ export interface IOrder {
   subtotal: number;
   feeAmount: number;
   total: number;
+  /** Snapshot of business.storeCurrency at checkout time. */
+  currency: BusinessCurrency;
+  /** subtotal * (1 - percentageCharge/100) — what the seller's Paystack
+   * subaccount actually received, per the split rate in effect at sale
+   * time. Recorded net-new alongside `feeAmount` (kept for backward
+   * compatibility) so historical orders stay accurate even if the
+   * business's plan/rate changes later. */
+  sellerAmount: number;
+  platformAmount: number;
   channel: OrderChannel;
   paidAt?: Date;
   createdAt: Date;
@@ -76,6 +86,13 @@ const orderSchema = new Schema<IOrder>(
     subtotal: { type: Number, required: true, min: 0 },
     feeAmount: { type: Number, required: true, min: 0, default: 0 },
     total: { type: Number, required: true, min: 0 },
+    currency: {
+      type: String,
+      enum: ["NGN", "GHS", "ZAR", "KES"],
+      default: "NGN",
+    },
+    sellerAmount: { type: Number, required: true, min: 0, default: 0 },
+    platformAmount: { type: Number, required: true, min: 0, default: 0 },
     channel: {
       type: String,
       enum: ["card", "transfer", "ussd"],

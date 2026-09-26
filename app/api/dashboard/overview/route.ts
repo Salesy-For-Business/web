@@ -1,7 +1,17 @@
 import { requireOwnedBusiness } from "@/lib/auth/owned-business";
 import { connectDb, Order, Product, type OrderLean } from "@/lib/db";
 import { jsonError, jsonOk } from "@/lib/api/http";
-import { salesyFeeRate } from "@/lib/plans";
+
+/** Orders placed before this feature existed have no sellerAmount/
+ * platformAmount recorded — fall back to the old feeAmount-derived split
+ * so historical numbers don't just show as zero. */
+function splitFor(order: OrderLean) {
+  if (order.sellerAmount || order.platformAmount) {
+    return { seller: order.sellerAmount, platform: order.platformAmount };
+  }
+  const platform = order.feeAmount || 0;
+  return { seller: order.total - platform, platform };
+}
 
 export type RevenuePeriod = "today" | "7d" | "30d" | "all";
 
@@ -49,13 +59,18 @@ export async function GET(request: Request) {
     const revenue = paidOrders.reduce((s, o) => s + o.total, 0);
     const paidCount = paidOrders.length;
     const avgOrderValue = paidCount ? Math.round(revenue / paidCount) : 0;
-    const feeRate = salesyFeeRate(owned.business.plan);
-    const platformFee = Math.round(revenue * feeRate);
-    const net = revenue - platformFee;
+    // Real numbers from what was actually split at each sale — not a
+    // post-hoc guess from the business's *current* plan/rate, since that
+    // may have changed since some of these orders were placed.
+    const platformFee = paidOrders.reduce((s, o) => s + splitFor(o).platform, 0);
+    const net = paidOrders.reduce((s, o) => s + splitFor(o).seller, 0);
+    const feeRate = revenue > 0 ? platformFee / revenue : 0;
 
-    const lifetimeGross = allPaid.reduce((s, o) => s + o.total, 0);
-    const lifetimeFee = allPaid.reduce((s, o) => s + (o.feeAmount || 0), 0);
-    const availableBalance = Math.max(0, lifetimeGross - lifetimeFee);
+    // Kept as `availableBalance` for the client contract, but this is now
+    // "what you've earned" (Paystack settles it directly), not a balance
+    // Salesy is holding for a manual withdrawal.
+    const lifetimeNet = allPaid.reduce((s, o) => s + splitFor(o).seller, 0);
+    const availableBalance = Math.max(0, lifetimeNet);
 
     const productSales = new Map<
       string,
@@ -124,6 +139,7 @@ export async function GET(request: Request) {
 
     return jsonOk({
       period: selected,
+      currency: owned.business.storeCurrency || "NGN",
       metrics: {
         revenue,
         totalOrders: paidCount + pendingCount,

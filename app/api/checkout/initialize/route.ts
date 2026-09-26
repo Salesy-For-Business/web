@@ -2,7 +2,6 @@ import { Types } from "mongoose";
 import { connectDb, Business, Order, Product } from "@/lib/db";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { checkoutInitializeSchema } from "@/lib/product-schemas";
-import { salesyFeeRate } from "@/lib/plans";
 import {
   channelsForMethod,
   initializeTransaction,
@@ -27,6 +26,11 @@ export async function POST(request: Request) {
     const business = await Business.findOne({ storeHandle: handle });
     if (!business) {
       return jsonError("Store not found.", 404);
+    }
+    // Hard gate: no subaccount means there's nowhere to send the seller's
+    // share of the money, so don't let a buyer pay into the void.
+    if (!business.paystackSubaccountCode) {
+      return jsonError("This store isn't ready to accept payments yet.", 409);
     }
 
     const lineItems: {
@@ -69,9 +73,15 @@ export async function POST(request: Request) {
       subtotal += product.price * item.qty;
     }
 
-    const feeRate = salesyFeeRate(business.plan);
-    const feeAmount = Math.round(subtotal * feeRate);
+    // The subaccount's cached percentage_charge is the authoritative split
+    // rate — not `salesyFeeRate(business.plan)`, which is just what the
+    // dashboard used to *display*. This is what Paystack is actually about
+    // to split at the gateway.
+    const percentageCharge = business.paystackSubaccountPercentageCharge ?? 5;
+    const feeAmount = Math.round(subtotal * (percentageCharge / 100));
+    const sellerAmount = subtotal - feeAmount;
     const total = subtotal;
+    const currency = business.storeCurrency || "NGN";
     const reference = makeOrderReference();
 
     await Order.create({
@@ -87,6 +97,9 @@ export async function POST(request: Request) {
       items: lineItems,
       subtotal,
       feeAmount,
+      currency,
+      sellerAmount,
+      platformAmount: feeAmount,
       total,
       channel: values.method,
     });
@@ -103,10 +116,13 @@ export async function POST(request: Request) {
 
     const init = await initializeTransaction({
       email: values.customer.email.trim().toLowerCase(),
-      amountKobo: Math.round(total * 100),
+      amountMinorUnits: Math.round(total * 100),
       reference,
       callbackUrl,
       channels: channelsForMethod(values.method),
+      currency,
+      subaccount: business.paystackSubaccountCode,
+      bearer: "account",
       metadata: {
         storeHandle: handle,
         businessId: String(business._id),

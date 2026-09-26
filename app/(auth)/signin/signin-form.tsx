@@ -43,6 +43,7 @@ function SignInForm() {
   function routeFor(next: string) {
     if (next === "pendingVerify") router.push("/signup/verify");
     else if (next === "pendingBusiness") router.push("/signup/business");
+    else if (next === "pendingPayout") router.push("/signup/payout");
     else router.push("/dashboard");
   }
 

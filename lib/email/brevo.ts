@@ -80,3 +80,52 @@ export async function sendOtpEmail(
     textContent: `Your Salesy code is ${code}. It expires in 15 minutes.`,
   });
 }
+
+export async function sendSubscriptionRenewalReminderEmail(input: {
+  email: string;
+  businessName: string;
+  planLabel: string;
+  renewsAt: Date;
+  amountLabel: string;
+}) {
+  const dateLabel = input.renewsAt.toLocaleDateString("en-NG", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const subject = `Your ${input.planLabel} plan renews on ${dateLabel}`;
+  const htmlContent = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#202124">
+      <p>Hi ${input.businessName},</p>
+      <p>Your Salesy ${input.planLabel} subscription renews on <strong>${dateLabel}</strong> for ${input.amountLabel}.</p>
+      <p>No action needed if your card on file is up to date. If it's expired or you'd like to update it, visit your dashboard's billing settings before then.</p>
+    </div>
+  `;
+  return sendBrevoEmail({
+    toEmail: input.email,
+    subject,
+    htmlContent,
+    textContent: `Your Salesy ${input.planLabel} subscription renews on ${dateLabel} for ${input.amountLabel}.`,
+  });
+}
+
+export async function sendSubscriptionPaymentFailedEmail(input: {
+  email: string;
+  businessName: string;
+  planLabel: string;
+}) {
+  const subject = `Your ${input.planLabel} payment failed — you're back on the Free plan`;
+  const htmlContent = `
+    <div style="font-family:Arial,sans-serif;line-height:1.5;color:#202124">
+      <p>Hi ${input.businessName},</p>
+      <p>We couldn't charge your card for your ${input.planLabel} subscription, so your store has moved back to the Free plan (5% platform fee on sales).</p>
+      <p>You can retry anytime from your dashboard's billing settings once your card is ready — your store keeps selling in the meantime, just on Free-plan terms.</p>
+    </div>
+  `;
+  return sendBrevoEmail({
+    toEmail: input.email,
+    subject,
+    htmlContent,
+    textContent: `We couldn't charge your card for your ${input.planLabel} subscription, so your store has moved back to the Free plan. Retry anytime from your dashboard.`,
+  });
+}

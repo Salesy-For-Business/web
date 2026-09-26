@@ -17,7 +17,7 @@ import {
 import { useStorefront } from "@/components/storefront/store-context";
 import { useCartStore } from "@/lib/cart-store";
 import { api, getApiError, type ApiOk } from "@/lib/api/client";
-import { formatNaira, storePath } from "@/lib/storefront";
+import { formatMoney, storePath } from "@/lib/storefront";
 
 type PayMethod = "card" | "transfer" | "ussd";
 
@@ -105,6 +105,25 @@ export function CheckoutForm() {
       <p className="text-[14px] text-muted" aria-live="polite">
         Preparing checkout…
       </p>
+    );
+  }
+
+  if (!store.acceptsPayments) {
+    return (
+      <div className="rounded-xl border border-border bg-surface p-6 text-center">
+        <h1 className="font-display text-[24px] tracking-tight text-heading">
+          This store isn’t accepting orders yet
+        </h1>
+        <p className="mt-2 text-[14px] text-muted">
+          {store.businessName} hasn’t finished payout setup. Check back soon.
+        </p>
+        <Link
+          href={storePath(store.handle)}
+          className={clsx(secondaryButtonClass, "mt-5 w-auto px-5")}
+        >
+          Back to store
+        </Link>
+      </div>
     );
   }
 
@@ -245,7 +264,7 @@ export function CheckoutForm() {
             disabled={loading}
             className={clsx(primaryButtonClass, "w-auto min-w-48 px-6")}
           >
-            {loading ? "Redirecting…" : `Pay ${formatNaira(subtotal)}`}
+            {loading ? "Redirecting…" : `Pay ${formatMoney(subtotal, store.currency)}`}
           </button>
           <Link
             href={storePath(store.handle, "/cart")}
@@ -270,14 +289,14 @@ export function CheckoutForm() {
                 {line.name} × {line.qty}
               </span>
               <span className="shrink-0 font-medium text-heading">
-                {formatNaira(line.price * line.qty)}
+                {formatMoney(line.price * line.qty, store.currency)}
               </span>
             </li>
           ))}
         </ul>
         <p className="mt-4 flex justify-between border-t border-border pt-4 text-[16px] font-medium text-heading">
           <span>Total</span>
-          <span>{formatNaira(subtotal)}</span>
+          <span>{formatMoney(subtotal, store.currency)}</span>
         </p>
       </aside>
     </div>

@@ -8,6 +8,9 @@ import {
 } from "mongoose";
 import type { AuthPlan } from "@/lib/auth-store";
 import type { LiveChatProviderId } from "@/lib/live-chat";
+import type { BusinessCurrency } from "@/lib/currencies";
+
+export type SubscriptionStatus = "none" | "active" | "past_due" | "cancelled";
 
 export interface IBusiness {
   userId: Types.ObjectId;
@@ -36,6 +39,32 @@ export interface IBusiness {
   liveChatEnabled: boolean;
   liveChatProvider: LiveChatProviderId;
   liveChatSnippet: string;
+
+  // Currency — store vs. billing are independent, with a sync toggle so
+  // most sellers never have to think about it (both default to NGN).
+  storeCurrency: BusinessCurrency;
+  billingCurrency: BusinessCurrency;
+  syncCurrencies: boolean;
+
+  // Bank account, collected once at signup — required before a store can
+  // accept orders (see `paystackSubaccountCode`).
+  bankAccountName?: string;
+  bankAccountNumber?: string;
+  bankCode?: string;
+  bankCountry?: string;
+
+  // Paystack subaccount — its presence is the "can accept orders" gate.
+  paystackSubaccountCode?: string;
+  paystackSubaccountPercentageCharge?: number;
+
+  // Recurring subscription (Boutique/Pro only).
+  paystackCustomerCode?: string;
+  paystackSubscriptionCode?: string;
+  paystackSubscriptionPlanCode?: string;
+  subscriptionStatus: SubscriptionStatus;
+  subscriptionRenewsAt?: Date;
+  lastRenewalReminderSentAt?: Date;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -91,6 +120,37 @@ const businessSchema = new Schema<IBusiness>(
       default: "smartsupp",
     },
     liveChatSnippet: { type: String, default: "" },
+
+    storeCurrency: {
+      type: String,
+      enum: ["NGN", "GHS", "ZAR", "KES"],
+      default: "NGN",
+    },
+    billingCurrency: {
+      type: String,
+      enum: ["NGN", "GHS", "ZAR", "KES"],
+      default: "NGN",
+    },
+    syncCurrencies: { type: Boolean, default: true },
+
+    bankAccountName: { type: String, trim: true },
+    bankAccountNumber: { type: String, trim: true },
+    bankCode: { type: String, trim: true },
+    bankCountry: { type: String, trim: true, uppercase: true },
+
+    paystackSubaccountCode: { type: String, index: true },
+    paystackSubaccountPercentageCharge: { type: Number },
+
+    paystackCustomerCode: { type: String },
+    paystackSubscriptionCode: { type: String },
+    paystackSubscriptionPlanCode: { type: String },
+    subscriptionStatus: {
+      type: String,
+      enum: ["none", "active", "past_due", "cancelled"],
+      default: "none",
+    },
+    subscriptionRenewsAt: { type: Date },
+    lastRenewalReminderSentAt: { type: Date },
   },
   { timestamps: true },
 );

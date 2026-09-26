@@ -3,9 +3,10 @@ import clsx from "clsx";
 const steps = [
   { id: 1, label: "Profile" },
   { id: 2, label: "Business" },
+  { id: 3, label: "Payout" },
 ] as const;
 
-export function SignupStepper({ current }: { current: 1 | 2 }) {
+export function SignupStepper({ current }: { current: 1 | 2 | 3 }) {
   return (
     <ol className="mb-8 flex items-center gap-3" aria-label="Sign up progress">
       {steps.map((step, index) => {

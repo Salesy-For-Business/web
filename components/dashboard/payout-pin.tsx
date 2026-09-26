@@ -25,7 +25,7 @@ type PayoutPinSetupProps = {
 
 export function PayoutPinSetup({
   title = "Create payout PIN",
-  description = `Choose a ${PAYOUT_PIN_LENGTH}-digit PIN. You’ll enter it every time you withdraw.`,
+  description = `Choose a ${PAYOUT_PIN_LENGTH}-digit PIN to confirm sensitive account changes.`,
   onComplete,
   className,
 }: PayoutPinSetupProps) {

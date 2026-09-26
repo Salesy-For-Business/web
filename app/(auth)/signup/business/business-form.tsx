@@ -181,8 +181,13 @@ function BusinessForm() {
         user: data.user,
         business: data.business,
       });
-      toast.success("Store created. Welcome to your dashboard.");
-      router.push("/dashboard");
+      if (data.next === "pendingPayout") {
+        toast.success("Store created. Add your payout details to go live.");
+        router.push("/signup/payout");
+      } else {
+        toast.success("Store created. Welcome to your dashboard.");
+        router.push("/dashboard");
+      }
     } catch (err) {
       const message = getApiError(
         err,

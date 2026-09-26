@@ -14,7 +14,7 @@ import {
 } from "@/components/auth/styles";
 import { useCartStore } from "@/lib/cart-store";
 import {
-  formatNaira,
+  formatMoney,
   productHref,
   storePath,
   type StoreProduct,
@@ -68,11 +68,11 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
           </h1>
           <p className="mt-4 flex flex-wrap items-baseline gap-3">
             <span className="text-[24px] font-medium text-heading">
-              {formatNaira(product.price)}
+              {formatMoney(product.price, store.currency)}
             </span>
             {product.compareAt ? (
               <span className="text-[16px] text-muted line-through">
-                {formatNaira(product.compareAt)}
+                {formatMoney(product.compareAt, store.currency)}
               </span>
             ) : null}
           </p>
@@ -117,7 +117,7 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
 
             <ShareButton
               url={productHref(store.handle, product.slug)}
-              text={`${product.name} — ${formatNaira(product.price)} at ${store.businessName}`}
+              text={`${product.name} — ${formatMoney(product.price, store.currency)} at ${store.businessName}`}
               className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-surface-muted text-heading hover:bg-surface"
             />
           </div>

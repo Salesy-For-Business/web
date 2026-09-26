@@ -3,6 +3,7 @@ import { getSessionFromCookies } from "@/lib/auth/session";
 import {
   isHandleTaken,
   normalizeHandle,
+  statusFor,
   toPublicBusiness,
   toPublicUser,
 } from "@/lib/auth/session-user";
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
     });
 
     return jsonOk({
-      next: "signedIn" as const,
+      next: statusFor(user.toObject(), business.toObject()),
       user: toPublicUser(user.toObject()),
       business: toPublicBusiness(business.toObject()),
     });

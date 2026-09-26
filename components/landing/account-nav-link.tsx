@@ -49,6 +49,14 @@ export function AccountNavLink({
     );
   }
 
+  if (status === "pendingPayout") {
+    return (
+      <Link href="/signup/payout" className={className} onClick={onClick}>
+        Finish setup
+      </Link>
+    );
+  }
+
   if (status === "pendingVerify") {
     return (
       <Link href="/signup/verify" className={className} onClick={onClick}>

@@ -8,7 +8,8 @@ import {
   primaryButtonClass,
   secondaryButtonClass,
 } from "@/components/auth/styles";
-import { formatNaira, greetingForHour } from "@/lib/dashboard";
+import { greetingForHour } from "@/lib/dashboard";
+import { formatMoney } from "@/lib/currencies";
 import {
   useDashboardOverview,
   type RevenuePeriod,
@@ -65,8 +66,10 @@ function ShareStoreButton({ handle }: { handle: string }) {
 
 function RevenueBars({
   points,
+  currency,
 }: {
   points: { label: string; revenue: number }[];
+  currency: string;
 }) {
   const max = Math.max(...points.map((p) => p.revenue), 1);
   return (
@@ -79,7 +82,7 @@ function RevenueBars({
               <div
                 className="w-full max-w-10 rounded-t-md bg-primary/80"
                 style={{ height: `${height}%` }}
-                title={formatNaira(point.revenue)}
+                title={formatMoney(point.revenue, currency)}
               />
             </div>
             <span className="text-[12px] text-muted">{point.label}</span>
@@ -107,6 +110,8 @@ export function OverviewPage() {
   const business = useAuthStore((s) => s.business);
   const [period, setPeriod] = useState<RevenuePeriod>("30d");
   const { data, isPending } = useDashboardOverview(period);
+  const currency = data?.currency ?? business?.storeCurrency ?? "NGN";
+  const money = (amount: number) => formatMoney(amount, currency);
 
   const plan = business?.plan ?? "free";
   const handle = business?.storeHandle ?? "mystore";
@@ -197,7 +202,7 @@ export function OverviewPage() {
                 Total revenue
               </p>
               <p className="mt-2 font-[system-ui] text-[36px] leading-none tracking-tight text-heading sm:text-[44px]">
-                {formatNaira(metrics.revenue)}
+                {money(metrics.revenue)}
               </p>
             </div>
             <div
@@ -233,7 +238,7 @@ export function OverviewPage() {
               { label: "Paid orders", value: String(metrics.paidOrders) },
               {
                 label: "Avg. order value",
-                value: formatNaira(metrics.avgOrderValue),
+                value: money(metrics.avgOrderValue),
               },
               {
                 label: "Unique buyers",
@@ -294,8 +299,8 @@ export function OverviewPage() {
           <div>
             <h2 className="text-[20px] leading-7">Earnings & settlement</h2>
             <p className="mt-1 max-w-2xl text-[14px] leading-6 text-muted">
-              What you keep after any plan fee. Payouts are instant — withdraw
-              to your bank anytime.
+              What you keep after any plan fee. Paystack pays it straight to
+              your bank — Salesy never holds your funds.
             </p>
           </div>
           <Link
@@ -303,27 +308,27 @@ export function OverviewPage() {
             className={clsx(secondaryButtonClass, "w-auto gap-2 px-4")}
           >
             <Wallet className="size-4" aria-hidden />
-            Withdraw
+            Payout settings
           </Link>
         </div>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           <div className="rounded-lg border border-border bg-surface p-5">
             <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-muted">
-              Credited to you
+              Your earnings
             </p>
             <p className="mt-2 font-[system-ui] text-[28px] text-heading">
-              {formatNaira(earnings.net)}
+              {money(earnings.net)}
             </p>
             <p className="mt-2 text-[13px] text-muted">
-              Available now: {formatNaira(data?.availableBalance ?? 0)}
+              Lifetime: {money(data?.availableBalance ?? 0)}
             </p>
           </div>
           <div className="rounded-lg border border-border bg-surface p-5">
             <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-muted">
-              Salesy fee taken
+              Salesy commission
             </p>
             <p className="mt-2 font-[system-ui] text-[28px] text-heading">
-              {formatNaira(earnings.platformFee)}
+              {money(earnings.platformFee)}
             </p>
             <p className="mt-2 text-[13px] text-muted">
               {plan === "free"
@@ -335,9 +340,9 @@ export function OverviewPage() {
             <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-muted">
               Payout timing
             </p>
-            <p className="mt-2 text-[28px] leading-none text-heading">Instant</p>
+            <p className="mt-2 text-[28px] leading-none text-heading">~1 business day</p>
             <p className="mt-2 text-[13px] text-muted">
-              Withdraw earnings anytime to your bank.
+              Paystack settles automatically — no action needed.
             </p>
           </div>
         </div>
@@ -355,7 +360,7 @@ export function OverviewPage() {
                 No paid orders yet. Share your store to get your first sale.
               </p>
             ) : (
-              <RevenueBars points={trajectory} />
+              <RevenueBars points={trajectory} currency={currency} />
             )}
           </div>
         </section>
@@ -425,7 +430,7 @@ export function OverviewPage() {
                     </p>
                   </div>
                   <p className="shrink-0 font-[system-ui] text-[14px] font-medium text-heading">
-                    {formatNaira(product.revenue)}
+                    {money(product.revenue)}
                   </p>
                 </li>
               ))}
@@ -467,7 +472,7 @@ export function OverviewPage() {
                   </div>
                   <div className="flex items-center justify-between gap-3 sm:block sm:shrink-0 sm:text-right">
                     <p className="font-[system-ui] text-[14px] font-medium text-heading">
-                      {formatNaira(tx.amount)}
+                      {money(tx.amount)}
                     </p>
                     <p
                       className={clsx(

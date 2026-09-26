@@ -9,7 +9,7 @@ import {
   secondaryButtonClass,
 } from "@/components/auth/styles";
 import { useCartStore } from "@/lib/cart-store";
-import { formatNaira, productHref, storePath } from "@/lib/storefront";
+import { formatMoney, productHref, storePath } from "@/lib/storefront";
 
 export function CartView() {
   const store = useStorefront();
@@ -18,6 +18,7 @@ export function CartView() {
   const setQty = useCartStore((s) => s.setQty);
   const removeItem = useCartStore((s) => s.removeItem);
   const subtotal = lines.reduce((sum, l) => sum + l.price * l.qty, 0);
+  const money = (amount: number) => formatMoney(amount, store.currency);
 
   if (!hydrated) {
     return (
@@ -78,7 +79,7 @@ export function CartView() {
                   {line.name}
                 </Link>
                 <p className="mt-1 text-[14px] text-muted">
-                  {formatNaira(line.price)} each
+                  {money(line.price)} each
                 </p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <div className="inline-flex h-9 items-center rounded-lg border border-border">
@@ -115,7 +116,7 @@ export function CartView() {
                 </div>
               </div>
               <p className="shrink-0 text-[15px] font-medium text-heading">
-                {formatNaira(line.price * line.qty)}
+                {money(line.price * line.qty)}
               </p>
             </li>
           ))}
@@ -127,7 +128,7 @@ export function CartView() {
         <dl className="mt-4 space-y-2 text-[14px]">
           <div className="flex justify-between">
             <dt className="text-muted">Subtotal</dt>
-            <dd className="font-medium text-heading">{formatNaira(subtotal)}</dd>
+            <dd className="font-medium text-heading">{money(subtotal)}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-muted">Delivery</dt>
@@ -136,7 +137,7 @@ export function CartView() {
         </dl>
         <p className="mt-4 border-t border-border pt-4 flex justify-between text-[16px] font-medium text-heading">
           <span>Total</span>
-          <span>{formatNaira(subtotal)}</span>
+          <span>{money(subtotal)}</span>
         </p>
         <Link
           href={storePath(store.handle, "/checkout")}

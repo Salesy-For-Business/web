@@ -7,6 +7,7 @@ export type RevenuePeriod = "today" | "7d" | "30d" | "all";
 
 export type DashboardOverview = {
   period: RevenuePeriod;
+  currency: string;
   metrics: {
     revenue: number;
     totalOrders: number;

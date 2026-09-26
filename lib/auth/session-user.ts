@@ -49,6 +49,24 @@ export function toPublicBusiness(doc: BusinessLike): AuthBusiness {
     liveChatEnabled: doc.liveChatEnabled,
     liveChatProvider: doc.liveChatProvider as AuthBusiness["liveChatProvider"],
     liveChatSnippet: doc.liveChatSnippet,
+    storeCurrency: (doc.storeCurrency ||
+      "NGN") as AuthBusiness["storeCurrency"],
+    billingCurrency: (doc.billingCurrency ||
+      "NGN") as AuthBusiness["billingCurrency"],
+    syncCurrencies: doc.syncCurrencies ?? true,
+    hasPayoutSetup: Boolean(doc.paystackSubaccountCode),
+    subaccountPercentageCharge: doc.paystackSubaccountPercentageCharge,
+    bankAccountName: doc.bankAccountName || undefined,
+    bankAccountNumberLast4: doc.bankAccountNumber
+      ? doc.bankAccountNumber.slice(-4)
+      : undefined,
+    bankCode: doc.bankCode || undefined,
+    bankCountry: doc.bankCountry || undefined,
+    subscriptionStatus: (doc.subscriptionStatus ||
+      "none") as AuthBusiness["subscriptionStatus"],
+    subscriptionRenewsAt: doc.subscriptionRenewsAt
+      ? doc.subscriptionRenewsAt.toISOString()
+      : undefined,
   };
 }
 
@@ -59,6 +77,7 @@ export function statusFor(
   if (!user) return "anonymous";
   if (!user.emailVerified) return "pendingVerify";
   if (!business) return "pendingBusiness";
+  if (!business.paystackSubaccountCode) return "pendingPayout";
   return "signedIn";
 }
 

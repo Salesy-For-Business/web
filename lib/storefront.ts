@@ -1,4 +1,5 @@
 import { formatNaira } from "@/lib/dashboard";
+import { formatMoney, type BusinessCurrency } from "@/lib/currencies";
 
 export type StoreContact = {
   whatsapp: string;
@@ -38,6 +39,12 @@ export type Storefront = {
   socialImageUrl: string | null;
   /** Brand accent for header chip / logo fallback */
   brandColor: string;
+  /** What buyers pay in — drives every price shown on the storefront. */
+  currency: BusinessCurrency;
+  /** True once the business has a Paystack subaccount — checkout is
+   * disabled on the storefront (and rejected server-side regardless)
+   * without one, since there'd be nowhere to send the seller's share. */
+  acceptsPayments: boolean;
   contact: StoreContact;
   products: StoreProduct[];
 };
@@ -60,6 +67,8 @@ export const DEMO_STORE: Storefront = {
   logoDataUrl: DEMO_LOGO_DATA_URL,
   socialImageUrl: null,
   brandColor: "#0F766E",
+  currency: "NGN",
+  acceptsPayments: true,
   contact: {
     whatsapp: "2348012345678",
     telegram: "chidicrafts",
@@ -278,4 +287,4 @@ export function resolveStoreOgImage(store: Storefront): string | null {
   return firstProductImage ?? null;
 }
 
-export { formatNaira };
+export { formatNaira, formatMoney };

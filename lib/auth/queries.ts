@@ -12,6 +12,7 @@ import type {
   ProfileValues,
   SignInValues,
 } from "@/lib/auth-schemas";
+import type { PayoutValues } from "@/lib/payout-schemas";
 
 export const authKeys = {
   session: ["auth", "session"] as const,
@@ -159,6 +160,56 @@ export function useCompleteBusinessMutation() {
         user: data.user,
         business: data.business,
       } satisfies SessionPayload);
+    },
+  });
+}
+
+export function useSetupPayoutMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: PayoutValues) => {
+      const { data } = await api.post<
+        ApiOk<{
+          next: AuthStatus;
+          user: AuthUser;
+          business: AuthBusiness;
+        }>
+      >("/business/payout", values);
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.setQueryData(authKeys.session, {
+        status: data.next,
+        user: data.user,
+        business: data.business,
+      } satisfies SessionPayload);
+    },
+  });
+}
+
+export function useUpgradePlanMutation() {
+  return useMutation({
+    mutationFn: async (tier: "boutique" | "pro") => {
+      const { data } = await api.post<ApiOk<{ authorizationUrl: string }>>(
+        "/business/upgrade",
+        { tier },
+      );
+      return data;
+    },
+  });
+}
+
+export function useCancelSubscriptionMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const { data } = await api.post<ApiOk<{ cancelled: boolean }>>(
+        "/business/cancel-subscription",
+      );
+      return data;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: authKeys.session });
     },
   });
 }

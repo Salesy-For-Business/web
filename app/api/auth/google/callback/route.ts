@@ -61,10 +61,13 @@ export async function GET(request: NextRequest) {
       });
       await setSessionCookie(token);
 
-      return redirectTo(
-        request,
-        status === "pendingBusiness" ? "/signup/business" : "/dashboard",
-      );
+      const nextPath =
+        status === "pendingBusiness"
+          ? "/signup/business"
+          : status === "pendingPayout"
+            ? "/signup/payout"
+            : "/dashboard";
+      return redirectTo(request, nextPath);
     }
 
     if (intent === "signin") {

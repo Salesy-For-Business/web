@@ -1,22 +1,19 @@
 "use client";
 
-import Link from "next/link";
-import clsx from "clsx";
 import { toast } from "sonner";
 import { DashboardPageHeader } from "@/components/dashboard/page-chrome";
 import { LiveChatSettings } from "@/components/dashboard/live-chat-settings";
+import { BillingSettings } from "@/components/dashboard/billing-settings";
 import {
   PayoutPinChange,
   PayoutPinSetup,
 } from "@/components/dashboard/payout-pin";
-import { secondaryButtonClass } from "@/components/auth/styles";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSignOutMutation } from "@/lib/auth/queries";
-import { planLabel, useAuthStore } from "@/lib/auth-store";
+import { useAuthStore } from "@/lib/auth-store";
 
 export default function SettingsPage() {
   const user = useAuthStore((s) => s.user);
-  const business = useAuthStore((s) => s.business);
   const payoutPin = useAuthStore((s) => s.payoutPin);
   const clearLocal = useAuthStore((s) => s.signOut);
   const signOutMutation = useSignOutMutation();
@@ -60,24 +57,10 @@ export default function SettingsPage() {
         {payoutPin ? (
           <PayoutPinChange />
         ) : (
-          <PayoutPinSetup description="Required before you can withdraw earnings to your bank." />
+          <PayoutPinSetup description="An extra PIN to confirm sensitive changes to your account, like updating your payout bank details." />
         )}
 
-        <section className="rounded-xl border border-border bg-background p-6">
-          <h2 className="text-[18px] leading-7">Store plan</h2>
-          <p className="mt-2 text-[14px] text-muted">
-            Current plan:{" "}
-            <span className="font-medium text-heading">
-              {planLabel(business?.plan ?? "free")}
-            </span>
-          </p>
-          <Link
-            href="/#pricing"
-            className={clsx(secondaryButtonClass, "mt-4 w-auto px-5")}
-          >
-            Compare plans
-          </Link>
-        </section>
+        <BillingSettings />
 
         <section className="rounded-xl border border-border bg-background p-6">
           <h2 className="text-[18px] leading-7">Appearance</h2>

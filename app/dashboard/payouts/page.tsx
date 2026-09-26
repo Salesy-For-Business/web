@@ -1,54 +1,85 @@
 "use client";
 
-import { Wallet } from "lucide-react";
+import { CheckCircle2, Wallet } from "lucide-react";
 import { DashboardPageHeader } from "@/components/dashboard/page-chrome";
-import { WithdrawForm } from "@/components/dashboard/withdraw-form";
-import { formatNaira } from "@/lib/dashboard";
-import { useDashboardOverview } from "@/lib/dashboard/queries";
-import { planLabel, salesyFeeRate, useAuthStore } from "@/lib/auth-store";
+import { planLabel, useAuthStore } from "@/lib/auth-store";
+import { findCurrency } from "@/lib/currencies";
 
 export default function PayoutsPage() {
   const business = useAuthStore((s) => s.business);
   const plan = business?.plan ?? "free";
-  const rate = salesyFeeRate(plan);
-  const { data, isPending } = useDashboardOverview("all");
-  const available = data?.availableBalance ?? 0;
+  const percentage = business?.subaccountPercentageCharge ?? 5;
+  const storeCurrency = findCurrency(business?.storeCurrency);
 
   return (
     <div>
       <DashboardPageHeader
         title="Payouts"
-        description="Instant withdrawals to your Nigerian bank account. Salesy does not hold your funds."
+        description="Paystack pays your share of every sale directly to your bank account — Salesy never holds your funds."
       />
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        <section className="h-fit rounded-xl border border-border bg-background p-6 lg:col-span-2">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section className="rounded-xl border border-border bg-background p-6">
           <div className="flex size-10 items-center justify-center rounded-full bg-tonal text-link">
             <Wallet className="size-5" aria-hidden />
           </div>
-          <p className="mt-4 text-[12px] font-medium uppercase tracking-[0.16em] text-muted">
-            Available to withdraw
+          <h2 className="mt-4 text-[18px] leading-7">Bank account on file</h2>
+          {business?.bankAccountName ? (
+            <dl className="mt-4 space-y-3 text-[14px]">
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted">Account name</dt>
+                <dd className="font-medium text-heading">
+                  {business.bankAccountName}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted">Account number</dt>
+                <dd className="font-medium text-heading">
+                  •••• {business.bankAccountNumberLast4}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted">Currency</dt>
+                <dd className="font-medium text-heading">
+                  {storeCurrency.symbol} {storeCurrency.name}
+                </dd>
+              </div>
+            </dl>
+          ) : (
+            <p className="mt-3 text-[14px] text-muted">
+              No bank account on file yet.
+            </p>
+          )}
+          <p className="mt-6 text-[13px] leading-5 text-muted">
+            To change your bank details, contact support — we lock this after
+            setup to protect your payouts from account takeover.
           </p>
-          <p className="mt-2 font-[system-ui] text-[36px] text-heading">
-            {isPending ? "…" : formatNaira(available)}
-          </p>
-          <p className="mt-3 text-[13px] leading-5 text-muted">
-            Plan: {planLabel(plan)}.{" "}
-            {rate > 0
-              ? `${rate * 100}% Salesy fee on Free plan sales.`
-              : "No Salesy commission on this plan."}
-          </p>
-          <p className="mt-2 text-[13px] text-muted">Payout timing: Instant</p>
-          <ul className="mt-4 space-y-2 text-[13px] leading-5 text-muted">
-            <li>1. Select a supported bank</li>
-            <li>2. Enter account number — name resolves automatically</li>
-            <li>3. Confirm with your payout PIN</li>
-          </ul>
         </section>
 
-        <div className="lg:col-span-3">
-          <WithdrawForm availableBalance={available} />
-        </div>
+        <section className="rounded-xl border border-border bg-background p-6">
+          <div className="flex size-10 items-center justify-center rounded-full bg-tonal text-link">
+            <CheckCircle2 className="size-5" aria-hidden />
+          </div>
+          <h2 className="mt-4 text-[18px] leading-7">How you get paid</h2>
+          <ul className="mt-4 space-y-3 text-[14px] leading-6 text-muted">
+            <li>
+              Every sale splits automatically at checkout — you keep{" "}
+              <span className="font-medium text-heading">
+                {100 - percentage}%
+              </span>
+              {percentage > 0 ? (
+                <> ({percentage}% Salesy fee on the {planLabel(plan)} plan).</>
+              ) : (
+                <> (no Salesy commission on the {planLabel(plan)} plan).</>
+              )}
+            </li>
+            <li>
+              Paystack settles your share straight to the account above,
+              typically within one business day.
+            </li>
+            <li>There’s nothing to withdraw manually — it just arrives.</li>
+          </ul>
+        </section>
       </div>
     </div>
   );

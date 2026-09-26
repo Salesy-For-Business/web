@@ -17,7 +17,7 @@ import {
 } from "@/components/auth/styles";
 import { api, getApiError, type ApiOk } from "@/lib/api/client";
 import { useCartStore } from "@/lib/cart-store";
-import { formatNaira, storePath } from "@/lib/storefront";
+import { formatMoney, storePath } from "@/lib/storefront";
 
 type OrderLine = { productId: string; name: string };
 
@@ -160,7 +160,7 @@ export function CheckoutSuccess() {
         </h1>
         <p className="mt-3 text-[15px] leading-6 text-muted">
           Thanks for shopping at {store.businessName}. Your payment of{" "}
-          <span className="font-medium text-heading">{formatNaira(total)}</span>{" "}
+          <span className="font-medium text-heading">{formatMoney(total, store.currency)}</span>{" "}
           is confirmed.
         </p>
         <p className="mt-2 text-[14px] text-muted">

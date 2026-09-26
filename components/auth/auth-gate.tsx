@@ -18,6 +18,7 @@ type AuthGateProps = {
 function destinationFor(status: AuthStatus, hasBusiness: boolean): string {
   if (status === "pendingVerify") return "/signup/verify";
   if (status === "pendingBusiness") return "/signup/business";
+  if (status === "pendingPayout") return "/signup/payout";
   if (status === "signedIn") {
     return hasBusiness ? "/dashboard" : "/signup/business";
   }

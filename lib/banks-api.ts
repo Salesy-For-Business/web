@@ -1,14 +1,40 @@
 /**
- * Nigerian bank list + NUBAN resolve via Paystack.
- * Set PAYSTACK_SECRET_KEY to go live; otherwise demo banks/resolve are used.
- *   GET https://api.paystack.co/bank
+ * Bank list + NUBAN resolve via Paystack, parameterized by bank country
+ * (NG/GH/ZA/KE — see `lib/currencies.ts`). Set PAYSTACK_SECRET_KEY to go
+ * live; otherwise Nigeria gets a demo bank list/resolver, other countries
+ * get an empty list until a key is configured.
+ *   GET https://api.paystack.co/bank?country=<name>
  *   GET https://api.paystack.co/bank/resolve?account_number=&bank_code=
+ *
+ * Paystack's real-time account-name resolution only supports Nigerian NUBAN
+ * accounts — GH/ZA/KE bank details are collected without live verification
+ * (the signup payout form shows a plain "account holder name" field for
+ * those instead of a resolved-name readout).
+ *
+ * NOTE: the `/bank` country query value is Paystack's full lowercase
+ * country name convention (e.g. "south africa") based on their documented
+ * API — verify against current Paystack docs if bank lists come back empty
+ * for a country.
  */
 
 import { DEMO_BANKS, demoResolveAccount, type Bank } from "@/lib/banks";
 
 const PAYSTACK_BASE = "https://api.paystack.co";
 const SECRET = process.env.PAYSTACK_SECRET_KEY ?? "";
+
+const COUNTRY_NAME: Record<string, string> = {
+  NG: "nigeria",
+  GH: "ghana",
+  ZA: "south africa",
+  KE: "kenya",
+};
+
+/** Countries whose bank accounts Paystack can resolve a holder name for
+ * in real time. Everyone else gets a plain text "account holder name"
+ * field in the UI instead. */
+export function supportsAccountResolution(bankCountry: string) {
+  return bankCountry === "NG";
+}
 
 function authHeaders(): HeadersInit {
   return {
@@ -17,19 +43,23 @@ function authHeaders(): HeadersInit {
   };
 }
 
-export async function fetchSupportedBanks(): Promise<Bank[]> {
+export async function fetchSupportedBanks(
+  bankCountry: string = "NG",
+): Promise<Bank[]> {
   if (!SECRET) {
-    return DEMO_BANKS;
+    return bankCountry === "NG" ? DEMO_BANKS : [];
   }
 
   try {
-    const res = await fetch(`${PAYSTACK_BASE}/bank`, {
+    const url = new URL(`${PAYSTACK_BASE}/bank`);
+    url.searchParams.set("country", COUNTRY_NAME[bankCountry] ?? "nigeria");
+    const res = await fetch(url.toString(), {
       headers: authHeaders(),
       next: { revalidate: 3600 },
     });
     if (!res.ok) {
       console.error("[banks] list failed", res.status);
-      return DEMO_BANKS;
+      return bankCountry === "NG" ? DEMO_BANKS : [];
     }
     const json = (await res.json()) as {
       data?: Bank[] | { banks?: Bank[] };
@@ -40,7 +70,7 @@ export async function fetchSupportedBanks(): Promise<Bank[]> {
       : json.data && "banks" in json.data
         ? json.data.banks
         : null;
-    if (!raw?.length) return DEMO_BANKS;
+    if (!raw?.length) return bankCountry === "NG" ? DEMO_BANKS : [];
     return raw
       .map((b) => ({
         code: String(b.code),
@@ -49,14 +79,19 @@ export async function fetchSupportedBanks(): Promise<Bank[]> {
       .sort((a, b) => a.name.localeCompare(b.name));
   } catch (err) {
     console.error("[banks] list error", err);
-    return DEMO_BANKS;
+    return bankCountry === "NG" ? DEMO_BANKS : [];
   }
 }
 
 export async function resolveBankAccount(
   accountNumber: string,
   bankCode: string,
+  bankCountry: string = "NG",
 ): Promise<{ accountName: string } | { error: string }> {
+  if (!supportsAccountResolution(bankCountry)) {
+    return { error: "not-supported" };
+  }
+
   const digits = accountNumber.replace(/\D/g, "");
 
   if (!SECRET) {

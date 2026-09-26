@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ProductDetail } from "@/components/storefront/product-detail";
 import {
   absoluteStoreUrl,
-  formatNaira,
+  formatMoney,
   getProduct,
   resolveStoreOgImage,
   type Storefront,
@@ -32,7 +32,7 @@ function productJsonLd(
     offers: {
       "@type": "Offer",
       url,
-      priceCurrency: "NGN",
+      priceCurrency: store.currency,
       price: product.price,
       availability: product.inStock
         ? "https://schema.org/InStock"
@@ -54,7 +54,7 @@ export async function generateMetadata({
   }
 
   const title = `${product.name} — ${store.businessName}`;
-  const description = `${product.description} ${formatNaira(product.price)} · ${store.businessName}`.slice(
+  const description = `${product.description} ${formatMoney(product.price, store.currency)} · ${store.businessName}`.slice(
     0,
     200,
   );

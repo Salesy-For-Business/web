@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import clsx from "clsx";
-import { formatNaira, productHref, type StoreProduct } from "@/lib/storefront";
+import { formatMoney, productHref, type StoreProduct } from "@/lib/storefront";
 import { useStorefront } from "@/components/storefront/store-context";
 
 export function ProductImage({
@@ -73,11 +73,11 @@ export function ProductCard({ product }: { product: StoreProduct }) {
         </h2>
         <p className="flex flex-wrap items-baseline gap-2 text-[15px]">
           <span className="font-medium text-heading">
-            {formatNaira(product.price)}
+            {formatMoney(product.price, store.currency)}
           </span>
           {product.compareAt ? (
             <span className="text-[13px] text-muted line-through">
-              {formatNaira(product.compareAt)}
+              {formatMoney(product.compareAt, store.currency)}
             </span>
           ) : null}
         </p>

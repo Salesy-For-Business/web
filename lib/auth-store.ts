@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { DEMO_OTP } from "@/lib/auth-schemas";
 import type { LiveChatProviderId } from "@/lib/live-chat";
+import type { BusinessCurrency } from "@/lib/currencies";
 import {
   planLabel as planLabelFromPlans,
   salesyFeeRate as salesyFeeRateFromPlans,
@@ -14,7 +15,12 @@ export type AuthStatus =
   | "anonymous"
   | "pendingVerify"
   | "pendingBusiness"
+  /** Business exists but has no Paystack subaccount yet — bank details are
+   * required before the store can accept orders. */
+  | "pendingPayout"
   | "signedIn";
+
+export type SubscriptionStatus = "none" | "active" | "past_due" | "cancelled";
 
 export type AuthProvider = "email" | "google";
 
@@ -65,6 +71,29 @@ export type AuthBusiness = {
   liveChatProvider: LiveChatProviderId;
   /** Pasted embed / widget snippet from the provider. */
   liveChatSnippet: string;
+
+  /** What buyers pay in. */
+  storeCurrency: BusinessCurrency;
+  /** What the Boutique/Pro subscription is billed in. */
+  billingCurrency: BusinessCurrency;
+  /** When true, billingCurrency always mirrors storeCurrency. */
+  syncCurrencies: boolean;
+
+  /** True once a Paystack subaccount exists — gates whether the store can
+   * accept orders. The raw subaccount code itself isn't sent to the client. */
+  hasPayoutSetup: boolean;
+  /** The main account's cut, mirrored from the live subaccount (5 on Free,
+   * 0 on Boutique/Pro). */
+  subaccountPercentageCharge?: number;
+  bankAccountName?: string;
+  /** Last 4 digits only — the full account number never leaves the server. */
+  bankAccountNumberLast4?: string;
+  bankCode?: string;
+  bankCountry?: string;
+
+  subscriptionStatus: SubscriptionStatus;
+  /** ISO date string. */
+  subscriptionRenewsAt?: string;
 };
 
 /** 4-digit payout / transaction PIN (demo storage). */
@@ -224,7 +253,9 @@ export const useAuthStore = create<AuthState>()(
         if (
           user &&
           user.email === normalized &&
-          (status === "signedIn" || status === "pendingBusiness") &&
+          (status === "signedIn" ||
+            status === "pendingBusiness" ||
+            status === "pendingPayout") &&
           user.emailVerified
         ) {
           return {
