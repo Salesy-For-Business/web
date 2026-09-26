@@ -44,8 +44,11 @@ export async function resolveStorefront(
         .sort({ createdAt: -1 })
         .lean<ProductLean[]>();
 
-      const phone = business.businessPhone || "";
-      const waDigits = phone.replace(/\D/g, "");
+      // businessPhone is now always a full international number (e.g.
+      // "+2348012345678" or "+15551234567") composed by PhoneField, so the
+      // digits alone are exactly what wa.me/<digits> expects — no more
+      // Nigeria-specific "add 234" fallback needed.
+      const waDigits = (business.businessPhone || "").replace(/\D/g, "");
 
       return {
         handle: business.storeHandle,
@@ -56,9 +59,7 @@ export async function resolveStorefront(
         socialImageUrl: business.socialImageUrl || null,
         brandColor: "#0F766E",
         contact: {
-          whatsapp: waDigits.startsWith("234")
-            ? waDigits
-            : waDigits.replace(/^0/, "234"),
+          whatsapp: waDigits,
           telegram: "",
           email: business.businessEmail,
           phone: business.businessPhone,

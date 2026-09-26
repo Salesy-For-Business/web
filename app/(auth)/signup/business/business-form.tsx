@@ -463,7 +463,7 @@ function BusinessForm() {
                   setValue("ownerFirstName", user.firstName);
                   setValue("ownerLastName", user.lastName);
                   setValue("ownerEmail", user.email);
-                  setValue("ownerPhone", user.phone.replace(/^\+234/, ""));
+                  setValue("ownerPhone", user.phone);
                 }
               }}
             />

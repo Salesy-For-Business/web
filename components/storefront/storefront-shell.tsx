@@ -17,9 +17,9 @@ export function StorefrontShell({
 }) {
   return (
     <StorefrontProvider store={store}>
-      <div className="flex min-h-full flex-col bg-[linear-gradient(180deg,var(--surface)_0%,var(--background)_28%)]">
+      <div className="flex min-h-full flex-col bg-background">
         <StorefrontHeader />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+        <main className="mx-auto w-full max-w-6xl min-h-dvh flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
           {children}
         </main>
         <StorefrontFooter />

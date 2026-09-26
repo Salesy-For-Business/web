@@ -25,7 +25,7 @@ function ChannelGlyph({
   className?: string;
 }) {
   if (icon.kind === "simple") {
-    return <BrandIcon icon={icon.icon} className={className} />;
+    return <BrandIcon icon={icon.icon} branded className={className} />;
   }
   const Lucide = icon.icon;
   return <Lucide className={className} aria-hidden />;

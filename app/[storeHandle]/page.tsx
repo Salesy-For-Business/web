@@ -21,9 +21,9 @@ export default function StoreHomePage() {
             />
           ) : null}
           <div>
-            <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-muted">
+            {/* <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-muted">
               salesy.link/{store.handle}
-            </p>
+            </p> */}
             <h1 className="mt-1 font-display text-[36px] leading-10 tracking-tight text-heading sm:text-[44px] sm:leading-[1.1]">
               {store.businessName}
             </h1>

@@ -32,7 +32,6 @@ export function AppToaster() {
       theme={theme}
       position="top-center"
       richColors
-      closeButton
       duration={4000}
       toastOptions={{
         classNames: {

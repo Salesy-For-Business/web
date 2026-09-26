@@ -1,26 +1,18 @@
 import { z } from "zod";
 import { NIGERIAN_STATES } from "@/lib/nigeria";
 
-/** Digits only after optional +234 / 0 prefix; 10 national digits. */
-export const ngPhoneSchema = z
+/**
+ * International phone number, already composed by `PhoneField` as
+ * "+<dial code><local digits>" (e.g. "+2348012345678", "+15551234567").
+ * A general E.164 sanity check, not full per-country validation — that
+ * needs real metadata (e.g. libphonenumber-js), which isn't wired in.
+ */
+export const phoneSchema = z
   .string()
   .trim()
   .min(1, "Enter a phone number")
-  .transform((value) => {
-    const digits = value.replace(/\D/g, "");
-    if (digits.startsWith("234") && digits.length === 13) {
-      return `+${digits}`;
-    }
-    if (digits.startsWith("0") && digits.length === 11) {
-      return `+234${digits.slice(1)}`;
-    }
-    if (digits.length === 10) {
-      return `+234${digits}`;
-    }
-    return value.trim();
-  })
-  .refine((value) => /^\+234[789]\d{9}$/.test(value), {
-    message: "Enter a valid Nigerian phone number",
+  .refine((value) => /^\+[1-9]\d{6,14}$/.test(value), {
+    message: "Enter a valid phone number, including your country code",
   });
 
 export const passwordSchema = z
@@ -53,7 +45,7 @@ export const profileSchema = z
     firstName: z.string().trim().min(1, "Enter your first name"),
     lastName: z.string().trim().min(1, "Enter your last name"),
     email: emailSchema,
-    phone: ngPhoneSchema,
+    phone: phoneSchema,
     provider: z.enum(["email", "google"]),
     password: z.string().optional(),
     confirmPassword: z.string().optional(),
@@ -157,7 +149,7 @@ export const businessSchema = z
     }
 
     if (!data.usePersonalPhone) {
-      const parsed = ngPhoneSchema.safeParse(data.businessPhone ?? "");
+      const parsed = phoneSchema.safeParse(data.businessPhone ?? "");
       if (!parsed.success) {
         ctx.addIssue({
           code: "custom",
@@ -217,7 +209,7 @@ export const businessSchema = z
           path: ["ownerEmail"],
         });
       }
-      const phoneParsed = ngPhoneSchema.safeParse(data.ownerPhone ?? "");
+      const phoneParsed = phoneSchema.safeParse(data.ownerPhone ?? "");
       if (!phoneParsed.success) {
         ctx.addIssue({
           code: "custom",
