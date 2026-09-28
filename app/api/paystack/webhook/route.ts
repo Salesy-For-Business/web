@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { markOrderPaid } from "@/lib/orders";
+import { markFeaturedListingPaid } from "@/lib/featured-listings";
 import { connectDb, Business, type BusinessDocument } from "@/lib/db";
 import { updateSubaccountPercentageCharge } from "@/lib/paystack";
 import { planCodeFor, type PaidPlanTier } from "@/lib/plan-codes";
@@ -133,7 +134,11 @@ export async function POST(request: Request) {
         // plan-tagged charge won't match any Order by reference, so this
         // is a no-op for it.
         if (data.reference && data.status === "success") {
-          await markOrderPaid(data.reference);
+          if (data.reference.startsWith("FTR-")) {
+            await markFeaturedListingPaid(data.reference);
+          } else {
+            await markOrderPaid(data.reference);
+          }
         }
         break;
       }

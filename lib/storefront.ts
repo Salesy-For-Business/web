@@ -197,6 +197,7 @@ export const RESERVED_STORE_HANDLES = new Set([
   "blog",
   "privacy",
   "terms",
+  "listings",
   "_next",
   "favicon.ico",
 ]);

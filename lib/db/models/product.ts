@@ -20,6 +20,11 @@ export interface IProduct {
   images: string[];
   tags: string[];
   accent: string;
+  /** Set on a paid "feature this product" purchase — see
+   * `featured-listing-order.ts`. A product is currently featured whenever
+   * this is in the future; no separate boolean is kept, so an expired slot
+   * just drops out of "currently featured" queries on its own. */
+  featuredUntil?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +48,7 @@ const productSchema = new Schema<IProduct>(
     images: { type: [String], default: [] },
     tags: { type: [String], default: [] },
     accent: { type: String, default: "#0F766E" },
+    featuredUntil: { type: Date, index: true },
   },
   { timestamps: true },
 );

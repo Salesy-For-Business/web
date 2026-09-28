@@ -23,8 +23,8 @@ export const dashboardNav: DashboardNavItem[] = [
   { href: "/dashboard/store-profile", label: "Store Profile", icon: Store },
   { href: "/dashboard/products", label: "Products", icon: Package },
   {
-    href: "/dashboard/grow-biz",
-    label: "Grow Biz",
+    href: "/dashboard/featured-listings",
+    label: "Feature Products",
     icon: Megaphone,
     badge: "New",
   },

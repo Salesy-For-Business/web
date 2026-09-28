@@ -33,3 +33,16 @@ export {
   type ReviewDocument,
   type ReviewLean,
 } from "@/lib/db/models/review";
+export {
+  FeaturedListingOrder,
+  type IFeaturedListingOrder,
+  type FeaturedListingOrderDocument,
+  type FeaturedListingOrderLean,
+  type FeaturedListingOrderStatus,
+} from "@/lib/db/models/featured-listing-order";
+export {
+  PlatformSettings,
+  PLATFORM_SETTINGS_ID,
+  type IPlatformSettings,
+  type PlatformSettingsDocument,
+} from "@/lib/db/models/platform-settings";

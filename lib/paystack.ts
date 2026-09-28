@@ -98,6 +98,14 @@ export function makeOrderReference() {
   return `SLY-${Date.now()}-${rand}`;
 }
 
+/** Distinct "FTR-" prefix lets the webhook tell a featured-listing charge
+ * apart from a normal storefront Order charge, since they're tracked in
+ * separate collections. */
+export function makeFeaturedListingReference() {
+  const rand = Math.random().toString(36).slice(2, 10).toUpperCase();
+  return `FTR-${Date.now()}-${rand}`;
+}
+
 // ---------------------------------------------------------------------------
 // Split payments — subaccounts
 // ---------------------------------------------------------------------------

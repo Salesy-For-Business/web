@@ -8,6 +8,14 @@ export type CurrencyInfo = {
   countryIso2: string;
   /** BCP 47 locale used for Intl.NumberFormat. */
   locale: string;
+  /** How many minor units make one major unit — e.g. 100 kobo to 1 naira.
+   * All four currencies here use 2 decimal places (kobo/pesewas/cents), but
+   * this is a per-currency field rather than a hardcoded ×100 in case a
+   * zero-decimal currency (e.g. JPY-style) is ever added. Paystack's API
+   * always wants amounts in minor units — the dashboard UI converts this
+   * for you, but the API (and `createPlan()`/`initializeTransaction()`)
+   * does not. */
+  minorUnitMultiplier: number;
 };
 
 /**
@@ -17,10 +25,10 @@ export type CurrencyInfo = {
  * intentionally left out for now — see the split-payments plan).
  */
 export const CURRENCIES: CurrencyInfo[] = [
-  { code: "NGN", name: "Nigerian Naira", symbol: "₦", countryIso2: "NG", locale: "en-NG" },
-  { code: "GHS", name: "Ghanaian Cedi", symbol: "₵", countryIso2: "GH", locale: "en-GH" },
-  { code: "ZAR", name: "South African Rand", symbol: "R", countryIso2: "ZA", locale: "en-ZA" },
-  { code: "KES", name: "Kenyan Shilling", symbol: "KSh", countryIso2: "KE", locale: "en-KE" },
+  { code: "NGN", name: "Nigerian Naira", symbol: "₦", countryIso2: "NG", locale: "en-NG", minorUnitMultiplier: 100 },
+  { code: "GHS", name: "Ghanaian Cedi", symbol: "₵", countryIso2: "GH", locale: "en-GH", minorUnitMultiplier: 100 },
+  { code: "ZAR", name: "South African Rand", symbol: "R", countryIso2: "ZA", locale: "en-ZA", minorUnitMultiplier: 100 },
+  { code: "KES", name: "Kenyan Shilling", symbol: "KSh", countryIso2: "KE", locale: "en-KE", minorUnitMultiplier: 100 },
 ];
 
 export const DEFAULT_CURRENCY: BusinessCurrency = "NGN";
@@ -39,6 +47,22 @@ export function isBusinessCurrency(value: string): value is BusinessCurrency {
 /** Bank country (ISO2) a given currency settles to. */
 export function bankCountryForCurrency(currency: string): string {
   return findCurrency(currency).countryIso2;
+}
+
+/**
+ * Converts a whole-unit amount (e.g. 5000 naira) to the minor units
+ * (e.g. 500000 kobo) Paystack's API requires everywhere it accepts an
+ * `amount` — `createPlan()`, `initializeTransaction()`, etc. Rounds to
+ * guard against floating-point amounts (e.g. 19.99) producing a fractional
+ * minor-unit value, which Paystack rejects.
+ */
+export function toMinorUnits(amount: number, currency: string): number {
+  return Math.round(amount * findCurrency(currency).minorUnitMultiplier);
+}
+
+/** Inverse of `toMinorUnits` — minor units back to a whole-unit amount. */
+export function fromMinorUnits(amountMinorUnits: number, currency: string): number {
+  return amountMinorUnits / findCurrency(currency).minorUnitMultiplier;
 }
 
 /**

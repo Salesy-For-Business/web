@@ -35,3 +35,9 @@ export function planCodeFor(
   const envVar = PLAN_CODE_ENV[tier][currency];
   return process.env[envVar] || null;
 }
+
+/** The env var name backing a given (tier, currency) plan code — shared with
+ * `scripts/create-paystack-plans.ts` so the two never drift apart. */
+export function envVarFor(tier: PaidPlanTier, currency: BusinessCurrency): string {
+  return PLAN_CODE_ENV[tier][currency];
+}
