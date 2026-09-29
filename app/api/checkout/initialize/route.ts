@@ -32,6 +32,9 @@ export async function POST(request: Request) {
     if (!business.paystackSubaccountCode) {
       return jsonError("This store isn't ready to accept payments yet.", 409);
     }
+    if (business.suspended) {
+      return jsonError("This store isn't accepting orders right now.", 409);
+    }
 
     const lineItems: {
       productId: Types.ObjectId;

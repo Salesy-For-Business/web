@@ -5,7 +5,8 @@ import {
   createCustomer,
   initializeSubscriptionCharge,
 } from "@/lib/paystack";
-import { planCodeFor, type PaidPlanTier } from "@/lib/plan-codes";
+import type { PaidPlanTier } from "@/lib/plan-codes";
+import { getPlanConfig, resolvePlanCode } from "@/lib/plan-config";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { Business } from "@/lib/db";
 
@@ -38,10 +39,11 @@ export async function POST(request: Request) {
     const tier: PaidPlanTier = parsed.data.tier;
     const billingCurrency = owned.business.billingCurrency || "NGN";
 
-    const planCode = planCodeFor(tier, billingCurrency);
+    const planCode = await resolvePlanCode(tier, billingCurrency);
     if (!planCode) {
+      const plan = await getPlanConfig(tier);
       return jsonError(
-        `${tier === "boutique" ? "Boutique" : "Pro"} isn't available in ${billingCurrency} yet.`,
+        `${plan.name} isn't available in ${billingCurrency} yet.`,
         422,
       );
     }

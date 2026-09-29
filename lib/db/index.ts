@@ -4,6 +4,7 @@ export {
   type IUser,
   type UserDocument,
   type UserLean,
+  type ModeratorRole,
 } from "@/lib/db/models/user";
 export {
   Business,
@@ -46,3 +47,23 @@ export {
   type IPlatformSettings,
   type PlatformSettingsDocument,
 } from "@/lib/db/models/platform-settings";
+export {
+  SupportTicket,
+  type ISupportTicket,
+  type ITicketMessage,
+  type SupportTicketDocument,
+  type SupportTicketLean,
+  type TicketStatus,
+  type TicketAuthorType,
+} from "@/lib/db/models/support-ticket";
+export {
+  PlanConfig,
+  type IPlanConfig,
+  type PlanConfigDocument,
+} from "@/lib/db/models/plan-config";
+export {
+  AdminAuditLog,
+  type IAdminAuditLog,
+  type AdminAuditLogDocument,
+  type AdminAuditLogLean,
+} from "@/lib/db/models/admin-audit-log";

@@ -1,16 +1,17 @@
 import { connectDb, Business } from "@/lib/db";
 import { sendSubscriptionRenewalReminderEmail } from "@/lib/email/brevo";
 import { formatMoney } from "@/lib/currencies";
-import { planLabel } from "@/lib/plans";
-import { planCodeFor, type PaidPlanTier } from "@/lib/plan-codes";
+import { isPaidPlanTier } from "@/lib/plan-codes";
+import { getPlanConfig } from "@/lib/plan-config";
+import { getPlatformSettings } from "@/lib/platform-settings";
 import { jsonError, jsonOk } from "@/lib/api/http";
 
 /**
  * Triggered daily by Vercel Cron (see `vercel.json`). Sends one reminder
- * email per business per day, for the 7 days leading up to their
- * subscription's next renewal — per the confirmed subscription-lifecycle
- * decision. `lastRenewalReminderSentAt` dedupes if the cron ever fires more
- * than once in a day.
+ * email per business per day, for the admin-configured number of days
+ * (default 7) leading up to their subscription's next renewal.
+ * `lastRenewalReminderSentAt` dedupes if the cron ever fires more than once
+ * in a day.
  */
 export async function GET(request: Request) {
   // Vercel signs cron requests with this header; also accept a manually
@@ -24,17 +25,24 @@ export async function GET(request: Request) {
   try {
     await connectDb();
 
+    const { subscriptionReminderDays } = await getPlatformSettings();
+    if (subscriptionReminderDays <= 0) {
+      return jsonOk({ checked: 0, sent: 0, disabled: true });
+    }
+
     const now = new Date();
     const startOfToday = new Date(
       now.getFullYear(),
       now.getMonth(),
       now.getDate(),
     );
-    const weekOut = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const windowEnd = new Date(
+      now.getTime() + subscriptionReminderDays * 24 * 60 * 60 * 1000,
+    );
 
     const businesses = await Business.find({
       subscriptionStatus: "active",
-      subscriptionRenewsAt: { $gte: now, $lte: weekOut },
+      subscriptionRenewsAt: { $gte: now, $lte: windowEnd },
       $or: [
         { lastRenewalReminderSentAt: { $exists: false } },
         { lastRenewalReminderSentAt: { $lt: startOfToday } },
@@ -44,21 +52,20 @@ export async function GET(request: Request) {
     let sent = 0;
     for (const business of businesses) {
       if (!business.subscriptionRenewsAt) continue;
-      const tier = business.plan as PaidPlanTier;
-      if (tier !== "boutique" && tier !== "pro") continue;
+      if (!isPaidPlanTier(business.plan)) continue;
 
-      // Amount label is illustrative — the real charge comes from the
-      // Paystack Plan itself; we don't store the plan's price locally.
-      const planCode = planCodeFor(tier, business.billingCurrency);
-      const amountLabel = planCode
-        ? `your ${planLabel(tier)} rate in ${business.billingCurrency}`
-        : formatMoney(0, business.billingCurrency);
+      const plan = await getPlanConfig(business.plan);
+      const monthly = plan.prices[business.billingCurrency]?.monthly;
+      const amountLabel =
+        monthly != null
+          ? formatMoney(monthly, business.billingCurrency)
+          : `your ${plan.name} rate in ${business.billingCurrency}`;
 
       try {
         await sendSubscriptionRenewalReminderEmail({
           email: business.ownerEmail || business.businessEmail,
           businessName: business.businessName,
-          planLabel: planLabel(tier),
+          planLabel: plan.name,
           renewsAt: business.subscriptionRenewsAt,
           amountLabel,
         });

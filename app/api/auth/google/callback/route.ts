@@ -52,6 +52,9 @@ export async function GET(request: NextRequest) {
       if (existing.provider !== "google") {
         return redirectTo(request, "/signin?error=google-wrong-provider");
       }
+      if (existing.suspended) {
+        return redirectTo(request, "/signin?error=google-failed");
+      }
 
       const business = await Business.findOne({ userId: existing._id }).lean();
       const status = statusFor(existing.toObject(), business);

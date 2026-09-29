@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import clsx from "clsx";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { secondaryButtonClass } from "@/components/auth/styles";
 import { ListingProductGrid } from "@/components/listings/listing-product-card";
 import type { ListingProduct } from "@/lib/listings";
 
@@ -14,11 +12,19 @@ export function ListingsBrowser({
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const productsRef = useRef(products);
 
-  async function loadMore() {
+  useEffect(() => {
+    productsRef.current = products;
+  }, [products]);
+
+  const loadMore = useCallback(async () => {
+    if (loading || !hasMore) return;
     setLoading(true);
     try {
-      const exclude = products.map((p) => p.id).join(",");
+      const exclude = productsRef.current.map((p) => p.id).join(",");
       const res = await fetch(
         `/api/listings/more?exclude=${encodeURIComponent(exclude)}`,
       );
@@ -31,7 +37,7 @@ export function ListingsBrowser({
         throw new Error(data.error || "Could not load more products.");
       }
       if (!data.products || data.products.length === 0) {
-        toast.message("That’s everything for now.");
+        setHasMore(false);
       } else {
         setProducts((prev) => [...prev, ...data.products!]);
       }
@@ -42,7 +48,23 @@ export function ListingsBrowser({
     } finally {
       setLoading(false);
     }
-  }
+  }, [loading, hasMore]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          void loadMore();
+        }
+      },
+      { rootMargin: "600px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   if (products.length === 0) {
     return (
@@ -55,16 +77,14 @@ export function ListingsBrowser({
   return (
     <div>
       <ListingProductGrid products={products} />
-      <div className="mt-8 flex justify-center">
-        <button
-          type="button"
-          onClick={() => void loadMore()}
-          disabled={loading}
-          className={clsx(secondaryButtonClass, "w-auto min-w-40 px-6")}
-        >
-          {loading ? "Loading…" : "Show more"}
-        </button>
-      </div>
+      <div ref={sentinelRef} className="h-1" aria-hidden />
+      {loading ? (
+        <p className="mt-8 text-center text-[13px] text-muted">Loading more…</p>
+      ) : !hasMore ? (
+        <p className="mt-8 text-center text-[13px] text-muted">
+          You’ve reached the end.
+        </p>
+      ) : null}
     </div>
   );
 }

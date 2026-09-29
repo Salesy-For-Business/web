@@ -10,8 +10,23 @@ import {
   Sections,
 } from "@/components/landing";
 import { AosInit } from "@/components/landing/aos-init";
+import { getPublicPlans } from "@/lib/plan-config";
+import { defaultPublicPlans, type PublicPlan } from "@/lib/plan-defaults";
 
-export default function Home() {
+export const revalidate = 60;
+
+async function loadPlans(): Promise<PublicPlan[]> {
+  try {
+    return await getPublicPlans();
+  } catch (err) {
+    console.error("[home] falling back to default plans", err);
+    return defaultPublicPlans();
+  }
+}
+
+export default async function Home() {
+  const plans = await loadPlans();
+
   return (
     <div className="flex flex-1 flex-col bg-background">
       <AosInit />
@@ -21,7 +36,7 @@ export default function Home() {
         <Help />
         <Features />
         <Sections />
-        <Pricing />
+        <Pricing plans={plans} />
         <Faq />
         <Cta />
       </main>

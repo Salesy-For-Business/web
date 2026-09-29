@@ -3,15 +3,11 @@ import type { BusinessCurrency } from "@/lib/currencies";
 export type PaidPlanTier = "boutique" | "pro";
 
 /**
- * Paystack Plan codes for recurring billing, one per (tier, currency) pair —
- * 2 tiers × 4 currencies = 8. These are created ONCE (via Paystack's
- * dashboard, or a one-off local script using `createPlan` in
- * `lib/paystack.ts`), never at request time — there's no product reason to
- * create them dynamically, and doing so risks orphaned duplicates on retry.
- *
- * Set the matching env var for every currency you actually offer; a tier +
- * currency combination with no env var configured is treated as
- * unavailable (see `planCodeFor`).
+ * Legacy env-var plan codes, one per (tier, currency) pair. Plan codes now
+ * live on the `PlanConfig` documents (set by the superadmin "Sync to
+ * Paystack" action); these env vars remain a fallback so deployments that
+ * were configured with `scripts/create-paystack-plans.ts` keep working.
+ * Resolve codes through `resolvePlanCode` in `lib/plan-config.ts`.
  */
 const PLAN_CODE_ENV: Record<PaidPlanTier, Record<BusinessCurrency, string>> = {
   boutique: {
@@ -28,7 +24,12 @@ const PLAN_CODE_ENV: Record<PaidPlanTier, Record<BusinessCurrency, string>> = {
   },
 };
 
-export function planCodeFor(
+export function isPaidPlanTier(value: string): value is PaidPlanTier {
+  return value === "boutique" || value === "pro";
+}
+
+/** The env-var plan code for a (tier, currency), or `null` when unset. */
+export function envPlanCodeFor(
   tier: PaidPlanTier,
   currency: BusinessCurrency,
 ): string | null {

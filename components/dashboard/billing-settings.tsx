@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import clsx from "clsx";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   primaryButtonClass,
@@ -13,28 +13,35 @@ import {
   useCancelSubscriptionMutation,
   useUpgradePlanMutation,
 } from "@/lib/auth/queries";
-import { planLabel, useAuthStore } from "@/lib/auth-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { formatMoney } from "@/lib/currencies";
+import { usePlanConfig, usePlansQuery } from "@/lib/plans-queries";
 
-const TIERS: { id: "boutique" | "pro"; label: string }[] = [
-  { id: "boutique", label: "Boutique" },
-  { id: "pro", label: "Pro" },
-];
+type PaidTier = "boutique" | "pro";
 
 export function BillingSettings() {
   const business = useAuthStore((s) => s.business);
   const upgrade = useUpgradePlanMutation();
   const cancel = useCancelSubscriptionMutation();
-  const [pendingTier, setPendingTier] = useState<"boutique" | "pro" | null>(
-    null,
-  );
+  const { data: plans, isPlaceholderData } = usePlansQuery();
+  const current = usePlanConfig(business?.plan ?? "free");
+  const [pendingTier, setPendingTier] = useState<PaidTier | null>(null);
 
   if (!business) return null;
 
   const plan = business.plan;
   const status = business.subscriptionStatus;
   const wasEverPaid = status === "past_due" || status === "cancelled";
+  const currency = business.billingCurrency;
 
-  async function startUpgrade(tier: "boutique" | "pro") {
+  const paidTiers = (plans ?? []).filter(
+    (p): p is typeof p & { id: PaidTier } =>
+      (p.id === "boutique" || p.id === "pro") &&
+      p.active &&
+      p.subscribableCurrencies.includes(currency),
+  );
+
+  async function startUpgrade(tier: PaidTier) {
     setPendingTier(tier);
     try {
       const data = await upgrade.mutateAsync(tier);
@@ -55,15 +62,15 @@ export function BillingSettings() {
   }
 
   return (
-    <section className="rounded-xl border border-border bg-background p-6">
+    <section className="rounded-xl border border-border bg-background p-4 sm:p-6">
       <h2 className="text-[18px] leading-7">Store plan</h2>
       <p className="mt-2 text-[14px] text-muted">
         Current plan:{" "}
-        <span className="font-medium text-heading">{planLabel(plan)}</span>
-        {plan === "free" ? (
-          <> — Salesy keeps 5% of every sale.</>
+        <span className="font-medium text-heading">{current.name}</span>
+        {current.commissionPercent > 0 ? (
+          <> — Salesy keeps {current.commissionPercent}% of every sale.</>
         ) : (
-          <> — Salesy takes no commission; billed in {business.billingCurrency}.</>
+          <> — Salesy takes no commission; billed in {currency}.</>
         )}
       </p>
 
@@ -74,28 +81,63 @@ export function BillingSettings() {
       ) : null}
 
       {plan === "free" ? (
-        <div className="mt-4 flex flex-wrap gap-3">
-          {TIERS.map((tier) => (
-            <button
-              key={tier.id}
-              type="button"
-              disabled={upgrade.isPending}
-              onClick={() => void startUpgrade(tier.id)}
-              className={clsx(primaryButtonClass, "w-auto px-5")}
-            >
-              {upgrade.isPending && pendingTier === tier.id ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : null}
-              {wasEverPaid ? "Retry" : "Upgrade to"} {tier.label}
-            </button>
-          ))}
-        </div>
+        isPlaceholderData ? (
+          <p className="mt-4 text-[14px] text-muted">Loading plans…</p>
+        ) : paidTiers.length === 0 ? (
+          <p className="mt-4 text-[14px] text-muted">
+            Paid plans aren’t available in {currency} yet.
+          </p>
+        ) : (
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {paidTiers.map((tier) => {
+              const monthly = tier.prices[currency]?.monthly;
+              return (
+                <div
+                  key={tier.id}
+                  className={clsx(
+                    "flex flex-col rounded-lg border p-4",
+                    tier.featured ? "border-primary" : "border-border",
+                  )}
+                >
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-[15px] font-medium text-heading">{tier.name}</p>
+                    {monthly != null ? (
+                      <p className="text-[14px] text-heading">
+                        {formatMoney(monthly, currency)}
+                        <span className="text-muted">/mo</span>
+                      </p>
+                    ) : null}
+                  </div>
+                  <ul className="mt-3 flex-1 space-y-1.5">
+                    {tier.features.slice(0, 3).map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-[13px] text-muted">
+                        <Check className="mt-0.5 size-3.5 shrink-0 text-primary" aria-hidden />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    disabled={upgrade.isPending}
+                    onClick={() => void startUpgrade(tier.id)}
+                    className={clsx(primaryButtonClass, "mt-4 h-11")}
+                  >
+                    {upgrade.isPending && pendingTier === tier.id ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : null}
+                    {wasEverPaid ? "Retry" : "Upgrade to"} {tier.name}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )
       ) : (
         <button
           type="button"
           disabled={cancel.isPending}
           onClick={() => void onCancel()}
-          className={clsx(secondaryButtonClass, "mt-4 w-auto px-5 text-red-600")}
+          className={clsx(secondaryButtonClass, "mt-4 px-5 text-red-600 sm:w-auto")}
         >
           {cancel.isPending ? "Cancelling…" : "Cancel subscription"}
         </button>

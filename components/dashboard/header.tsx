@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ExternalLink, Menu, Wallet } from "lucide-react";
+import { Bell, ExternalLink, Menu } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { dashboardNav } from "@/lib/dashboard";
 import { useAuthStore } from "@/lib/auth-store";
@@ -50,13 +50,7 @@ export function DashboardHeader({ onMenuOpen }: { onMenuOpen: () => void }) {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            href="/dashboard/payouts"
-            className="hidden items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-[13px] font-medium text-heading hover:bg-surface sm:inline-flex"
-          >
-            <Wallet className="size-4" aria-hidden />
-            Withdraw
-          </Link>
+         
           <Link
             href={storeUrl}
             target="_blank"

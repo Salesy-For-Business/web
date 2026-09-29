@@ -8,6 +8,7 @@ import clsx from "clsx";
 import { toast } from "sonner";
 import { ContactChannels } from "@/components/storefront/contact-channels";
 import { useStorefront } from "@/components/storefront/store-context";
+import { Select } from "@/components/ui/select";
 import {
   fieldErrorClass,
   fieldLabelClass,
@@ -189,24 +190,17 @@ export function CheckoutSuccess() {
         ) : (
           <form className="mt-4 space-y-4" onSubmit={submitReview} noValidate>
             {lines.length > 1 ? (
-              <div>
-                <label htmlFor="review-product" className={fieldLabelClass}>
-                  Product
-                </label>
-                <select
-                  id="review-product"
-                  className="h-12 w-full rounded-lg border border-border bg-background px-4 text-[16px] text-foreground"
-                  value={productId}
-                  onChange={(e) => setProductId(e.target.value)}
-                >
-                  <option value="">Select a product</option>
-                  {lines.map((line) => (
-                    <option key={line.productId} value={line.productId}>
-                      {line.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <Select
+                id="review-product"
+                label="Product"
+                placeholder="Select a product"
+                options={lines.map((line) => ({
+                  value: line.productId,
+                  label: line.name,
+                }))}
+                value={productId}
+                onChange={setProductId}
+              />
             ) : null}
 
             <div>

@@ -13,6 +13,7 @@ import {
 import { getApiError, useSetupPayoutMutation } from "@/lib/auth/queries";
 import { useAuthStore } from "@/lib/auth-store";
 import { CurrencySelect } from "@/components/currency-select";
+import { usePlatformInfo } from "@/lib/platform-queries";
 import {
   BankAccountPicker,
   isAccountReady,
@@ -68,13 +69,13 @@ function PayoutForm() {
   const business = useAuthStore((s) => s.business);
   const setup = useSetupPayoutMutation();
 
-  const [storeCurrency, setStoreCurrency] = useState<BusinessCurrency>(
-    DEFAULT_CURRENCY,
-  );
+  const { data: platform } = usePlatformInfo();
+  const platformDefault = platform?.defaultStoreCurrency ?? DEFAULT_CURRENCY;
+  const [storeCurrencyChoice, setStoreCurrency] = useState<BusinessCurrency | null>(null);
   const [syncCurrencies, setSyncCurrencies] = useState(true);
-  const [billingCurrency, setBillingCurrency] = useState<BusinessCurrency>(
-    DEFAULT_CURRENCY,
-  );
+  const [billingCurrencyChoice, setBillingCurrency] = useState<BusinessCurrency | null>(null);
+  const storeCurrency = storeCurrencyChoice ?? platformDefault;
+  const billingCurrency = billingCurrencyChoice ?? platformDefault;
   const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");

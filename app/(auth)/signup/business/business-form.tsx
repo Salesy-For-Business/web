@@ -27,10 +27,19 @@ import {
   fieldErrorClass,
   fieldHintClass,
   fieldLabelClass,
-  inputClass,
   textareaClass,
 } from "@/components/auth/styles";
 import clsx from "clsx";
+import { SearchableSelect } from "@/components/searchable-select";
+import { Select } from "@/components/ui/select";
+
+const STATE_OPTIONS = NIGERIAN_STATES.map((state) => ({ value: state, label: state }));
+
+const OWNER_ROLE_OPTIONS = [
+  { value: "Owner", label: "Owner" },
+  { value: "Manager", label: "Manager" },
+  { value: "Partner", label: "Partner" },
+];
 
 function ToggleRow({
   label,
@@ -404,29 +413,23 @@ function BusinessForm() {
                 error={errors.city?.message}
                 {...register("city")}
               />
-              <div>
-                <label htmlFor="state" className={fieldLabelClass}>
-                  State
-                </label>
-                <select
-                  id="state"
-                  className={inputClass}
-                  aria-invalid={errors.state ? true : undefined}
-                  {...register("state")}
-                >
-                  <option value="">Select state</option>
-                  {NIGERIAN_STATES.map((state) => (
-                    <option key={state} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select>
-                {errors.state ? (
-                  <p className={fieldErrorClass} role="alert">
-                    {errors.state.message}
-                  </p>
-                ) : null}
-              </div>
+              <Controller
+                name="state"
+                control={control}
+                render={({ field }) => (
+                  <SearchableSelect
+                    id="state"
+                    label="State"
+                    options={STATE_OPTIONS}
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    placeholder="Select state"
+                    searchPlaceholder="Search states…"
+                    visibleCount={STATE_OPTIONS.length}
+                    error={errors.state?.message}
+                  />
+                )}
+              />
             </div>
           </div>
         ) : null}
@@ -509,16 +512,21 @@ function BusinessForm() {
                 />
               )}
             />
-            <div>
-              <label htmlFor="ownerRole" className={fieldLabelClass}>
-                Role
-              </label>
-              <select id="ownerRole" className={inputClass} {...register("ownerRole")}>
-                <option value="Owner">Owner</option>
-                <option value="Manager">Manager</option>
-                <option value="Partner">Partner</option>
-              </select>
-            </div>
+            <Controller
+              name="ownerRole"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  id="ownerRole"
+                  label="Role"
+                  options={OWNER_ROLE_OPTIONS}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.ownerRole?.message}
+                />
+              )}
+            />
           </div>
         ) : null}
 

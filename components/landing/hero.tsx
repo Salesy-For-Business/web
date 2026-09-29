@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Store } from "lucide-react";
+import { ShoppingBag, Store } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -34,6 +34,12 @@ export default function Hero() {
           className="inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] font-medium text-foreground hover:bg-tonal hover:text-link"
         >
           See Demo <Store size={16} />
+        </Link>
+        <Link
+          href="/listings"
+          className="inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] font-medium text-foreground hover:bg-tonal hover:text-link"
+        >
+          Marketplace <ShoppingBag size={16} />
         </Link>
       </div>
     </section>

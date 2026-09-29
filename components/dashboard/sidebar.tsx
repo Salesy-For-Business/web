@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ExternalLink,
   LogOut,
+  ShieldCheck,
   X,
 } from "lucide-react";
 import clsx from "clsx";
@@ -29,7 +31,10 @@ export function DashboardSidebar({
   onClose?: () => void;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const queryClient = useQueryClient();
   const business = useAuthStore((s) => s.business);
+  const isModerator = useAuthStore((s) => s.user?.isModerator ?? false);
   const clearLocal = useAuthStore((s) => s.signOut);
   const signOutMutation = useSignOutMutation();
 
@@ -46,11 +51,7 @@ export function DashboardSidebar({
   const content = (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between px-5 py-5">
-        <Link
-          href="/dashboard"
-          className="hover:opacity-90"
-          onClick={onClose}
-        >
+        <Link href="/dashboard" className="hover:opacity-90" onClick={onClose}>
           <Logo />
         </Link>
         {onClose ? (
@@ -80,11 +81,13 @@ export function DashboardSidebar({
             </div>
           )}
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[14px] font-medium text-heading">{name}</p>
+            <p className="truncate text-[14px] font-medium text-heading">
+              {name}
+            </p>
             <p className="mt-0.5 text-[12px] uppercase tracking-wide text-muted">
               {planLabel(plan)}
             </p>
-            <p className="truncate text-[12px] text-muted">/{handle}</p>
+            {/* <p className="truncate text-[12px] text-muted">/{handle}</p> */}
           </div>
         </div>
       </div>
@@ -100,6 +103,21 @@ export function DashboardSidebar({
           <ExternalLink className="size-4 shrink-0" aria-hidden />
           Live storefront
         </Link>
+        {isModerator ? (
+          <Link
+            href="/admin"
+            onClick={onClose}
+            className={clsx(
+              "mt-2 flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-[14px] font-medium",
+              pathname.startsWith("/admin")
+                ? "bg-tonal text-link dark:text-white dark:bg-primary"
+                : "text-heading hover:bg-surface hover:text-heading",
+            )}
+          >
+            <ShieldCheck className="size-4 shrink-0" aria-hidden />
+            <span className="flex-1">Admin Panel</span>
+          </Link>
+        ) : null}
         <button
           type="button"
           className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-[14px] font-medium text-heading hover:bg-surface"
@@ -112,7 +130,8 @@ export function DashboardSidebar({
                 toast.error("Signed out locally. Session may still be open.");
               }
               clearLocal();
-              window.location.href = "/signin";
+              queryClient.clear();
+              router.replace("/signin");
             })();
           }}
         >
@@ -150,6 +169,22 @@ export function DashboardSidebar({
             </Link>
           );
         })}
+
+        {/* {isModerator ? (
+          <Link
+            href="/admin"
+            onClick={onClose}
+            className={clsx(
+              "mt-2 flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-[14px] font-medium",
+              pathname.startsWith("/admin")
+                ? "bg-tonal text-link dark:text-white dark:bg-primary"
+                : "text-heading hover:bg-surface hover:text-heading",
+            )}
+          >
+            <ShieldCheck className="size-4 shrink-0" aria-hidden />
+            <span className="flex-1">Admin Panel</span>
+          </Link>
+        ) : null} */}
       </nav>
     </div>
   );

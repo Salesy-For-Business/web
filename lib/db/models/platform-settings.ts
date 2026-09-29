@@ -1,12 +1,11 @@
 import { Schema, models, model, type HydratedDocument, type Model } from "mongoose";
+import type { BusinessCurrency } from "@/lib/currencies";
 
 /**
  * Singleton document (one row, upserted by `_id`) holding platform-wide
- * pricing knobs that aren't tied to any one business — starting with the
- * featured-listing weekly fee. `lib/platform-settings.ts` reads/writes this
- * with sensible in-code fallbacks, so the feature works before this
- * collection has ever been written to; the upcoming admin panel edits the
- * same document.
+ * knobs that aren't tied to any one business. `lib/platform-settings.ts`
+ * reads it with in-code fallbacks, so every feature works before this
+ * collection has ever been written to; the superadmin Settings page edits it.
  */
 export interface IPlatformSettings {
   _id: string;
@@ -18,6 +17,15 @@ export interface IPlatformSettings {
     ZAR?: number;
     KES?: number;
   };
+  /** How many days before renewal the daily reminder emails start. */
+  subscriptionReminderDays?: number;
+  /** Public contact address shown to sellers for platform support. */
+  supportEmail?: string;
+  /** Currency new stores default to at signup. */
+  defaultStoreCurrency?: BusinessCurrency;
+  /** Bcrypt hash of the shared 6-digit admin-panel PIN. Unset means "still
+   * the literal default" — see `lib/admin/gate.ts`. */
+  adminPinHash?: string;
   updatedAt: Date;
 }
 
@@ -32,6 +40,10 @@ const platformSettingsSchema = new Schema<IPlatformSettings>(
       ZAR: { type: Number, min: 0 },
       KES: { type: Number, min: 0 },
     },
+    subscriptionReminderDays: { type: Number, min: 0, max: 30 },
+    supportEmail: { type: String, trim: true, lowercase: true },
+    defaultStoreCurrency: { type: String, enum: ["NGN", "GHS", "ZAR", "KES"] },
+    adminPinHash: { type: String },
   },
   { timestamps: { createdAt: false, updatedAt: true } },
 );

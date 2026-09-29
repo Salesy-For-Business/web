@@ -21,6 +21,8 @@ export function toPublicUser(doc: UserLike): AuthUser {
     password: null,
     provider: doc.provider as AuthUser["provider"],
     emailVerified: doc.emailVerified,
+    isModerator: Boolean(doc.isModerator),
+    moderatorRole: doc.moderatorRole ?? null,
   };
 }
 
@@ -67,6 +69,7 @@ export function toPublicBusiness(doc: BusinessLike): AuthBusiness {
     subscriptionRenewsAt: doc.subscriptionRenewsAt
       ? doc.subscriptionRenewsAt.toISOString()
       : undefined,
+    suspended: Boolean(doc.suspended),
   };
 }
 
@@ -74,7 +77,7 @@ export function statusFor(
   user: UserLike | null,
   business: BusinessLike | null,
 ): AuthStatus {
-  if (!user) return "anonymous";
+  if (!user || user.suspended) return "anonymous";
   if (!user.emailVerified) return "pendingVerify";
   if (!business) return "pendingBusiness";
   if (!business.paystackSubaccountCode) return "pendingPayout";
@@ -100,7 +103,7 @@ export async function getAuthSession(): Promise<AuthSession> {
   }
 
   const user = await User.findById(session.sub).lean<UserLike | null>();
-  if (!user) {
+  if (!user || user.suspended) {
     return { status: "anonymous", user: null, business: null, userId: null };
   }
 

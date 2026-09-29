@@ -46,6 +46,10 @@ export async function POST(request: Request) {
       return jsonError("Incorrect email or password.", 401);
     }
 
+    if (user.suspended) {
+      return jsonError("This account has been suspended.", 403);
+    }
+
     const business = await Business.findOne({ userId: user._id }).lean();
     const userObj = user.toObject();
     const status = statusFor(userObj, business);

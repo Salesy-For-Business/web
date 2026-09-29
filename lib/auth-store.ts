@@ -26,6 +26,8 @@ export type AuthProvider = "email" | "google";
 
 export type OtpPurpose = "signup" | "reset" | null;
 
+export type ModeratorRole = "support" | "finance" | "superadmin";
+
 export type AuthUser = {
   firstName: string;
   lastName: string;
@@ -35,6 +37,9 @@ export type AuthUser = {
   password: string | null;
   provider: AuthProvider;
   emailVerified: boolean;
+  /** Platform staff flag — shows the "Admin Panel" sidebar link. */
+  isModerator: boolean;
+  moderatorRole: ModeratorRole | null;
 };
 
 export type AuthPlan = "free" | "boutique" | "pro";
@@ -94,6 +99,9 @@ export type AuthBusiness = {
   subscriptionStatus: SubscriptionStatus;
   /** ISO date string. */
   subscriptionRenewsAt?: string;
+
+  /** Set by a superadmin — blocks new checkouts when true. */
+  suspended: boolean;
 };
 
 /** 4-digit payout / transaction PIN (demo storage). */
@@ -275,6 +283,8 @@ export const useAuthStore = create<AuthState>()(
             password: isGoogle ? null : password,
             provider,
             emailVerified: isGoogle,
+            isModerator: false,
+            moderatorRole: null,
           },
           business: null,
           otpPurpose: isGoogle ? null : "signup",
@@ -320,6 +330,7 @@ export const useAuthStore = create<AuthState>()(
             liveChatEnabled: business.liveChatEnabled ?? false,
             liveChatProvider: business.liveChatProvider ?? "smartsupp",
             liveChatSnippet: business.liveChatSnippet ?? "",
+            suspended: business.suspended ?? false,
           },
           status: "signedIn",
           otpPurpose: null,
@@ -514,6 +525,7 @@ export const useAuthStore = create<AuthState>()(
             liveChatEnabled: business.liveChatEnabled ?? false,
             liveChatProvider: business.liveChatProvider ?? "smartsupp",
             liveChatSnippet: business.liveChatSnippet ?? "",
+            suspended: business.suspended ?? false,
           };
         }
         state?.setHydrated(true);

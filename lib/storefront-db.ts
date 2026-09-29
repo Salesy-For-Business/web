@@ -59,7 +59,8 @@ export async function resolveStorefront(
         socialImageUrl: business.socialImageUrl || null,
         brandColor: "#0F766E",
         currency: business.storeCurrency || "NGN",
-        acceptsPayments: Boolean(business.paystackSubaccountCode),
+        acceptsPayments:
+          Boolean(business.paystackSubaccountCode) && !business.suspended,
         contact: {
           whatsapp: waDigits,
           telegram: "",

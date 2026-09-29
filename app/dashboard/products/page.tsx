@@ -12,17 +12,21 @@ import {
   useDeleteProductMutation,
   useProductsQuery,
 } from "@/lib/products/queries";
-import { productListingLimit, useAuthStore } from "@/lib/auth-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { listingLimitValue } from "@/lib/plan-defaults";
+import { usePlanConfig } from "@/lib/plans-queries";
 
 export default function ProductsPage() {
   const plan = useAuthStore((s) => s.business?.plan ?? "free");
-  const planLimit = productListingLimit(plan);
+  const planConfig = usePlanConfig(plan);
   const { data, isPending, isError } = useProductsQuery();
   const remove = useDeleteProductMutation();
 
   const products = data?.products ?? [];
   const count = data?.count ?? 0;
-  const limit = data?.limit ?? planLimit;
+  const limit = listingLimitValue(
+    data ? data.limit : planConfig.listingLimit,
+  );
   const atLimit = count >= limit;
 
   async function onDelete(id: string, name: string) {
@@ -53,7 +57,7 @@ export default function ProductsPage() {
               if (atLimit) {
                 e.preventDefault();
                 toast.error(
-                  `Free plan allows ${limit} listings. Upgrade to add more.`,
+                  `${planConfig.name} plan allows ${limit} listings. Upgrade to add more.`,
                 );
               }
             }}
@@ -67,7 +71,9 @@ export default function ProductsPage() {
       <div className="mb-4 flex items-center justify-between text-[13px] text-muted">
         <p>
           {isPending ? "…" : count} listings
-          {limit === Infinity ? " · Unlimited plan" : ` · ${limit} on Free`}
+          {limit === Infinity
+            ? " · Unlimited plan"
+            : ` · ${limit} on ${planConfig.name}`}
         </p>
         <div className="flex size-8 items-center justify-center rounded-lg bg-tonal text-link">
           <Package className="size-4" aria-hidden />

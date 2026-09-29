@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronDown, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import clsx from "clsx";
 import { ProductGrid } from "@/components/storefront/product-grid";
 import { inputClass } from "@/components/auth/styles";
+import { Select } from "@/components/ui/select";
 import type { StoreProduct } from "@/lib/storefront";
 
 type TimeFilter = "latest" | "recent" | "oldest";
@@ -101,24 +102,13 @@ function SelectField({
   className?: string;
 }) {
   return (
-    <label className={clsx("relative block", className)}>
-      <span className="sr-only">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={clsx(inputClass, "appearance-none pr-10")}
-      >
-        {options.map((option) => (
-          <option key={option.id} value={option.id}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      <ChevronDown
-        className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-muted"
-        aria-hidden
-      />
-    </label>
+    <Select
+      ariaLabel={label}
+      className={className}
+      options={options.map((o) => ({ value: o.id, label: o.label }))}
+      value={value}
+      onChange={onChange}
+    />
   );
 }
 

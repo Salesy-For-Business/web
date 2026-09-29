@@ -1,3 +1,5 @@
+import { DEFAULT_PLAN_CONFIGS } from "@/lib/plan-defaults";
+
 export type PlanId = "free" | "boutique" | "pro";
 
 export function planLabel(plan: PlanId) {
@@ -6,11 +8,15 @@ export function planLabel(plan: PlanId) {
   return "Free";
 }
 
-/** Salesy platform fee rate — Free only. Boutique and Pro: no commission. */
+/**
+ * Code-default commission rate (0–1). Live values are admin-editable — use
+ * `usePlansQuery` on the client or `commissionPercentFor` on the server.
+ */
 export function salesyFeeRate(plan: PlanId) {
-  return plan === "free" ? 0.05 : 0;
+  return DEFAULT_PLAN_CONFIGS[plan].commissionPercent / 100;
 }
 
+/** Code-default listing limit. Live values: `usePlansQuery` / `listingLimitFor`. */
 export function productListingLimit(plan: PlanId) {
-  return plan === "free" ? 5 : Infinity;
+  return DEFAULT_PLAN_CONFIGS[plan].listingLimit ?? Infinity;
 }

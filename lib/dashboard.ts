@@ -9,6 +9,7 @@ import {
   Gift,
   Settings,
   Wallet,
+  Ticket,
 } from "lucide-react";
 
 export type DashboardNavItem = {
@@ -32,6 +33,7 @@ export const dashboardNav: DashboardNavItem[] = [
   { href: "/dashboard/reviews", label: "Reviews", icon: Star },
   { href: "/dashboard/refer", label: "Refer & Earn", icon: Gift },
   { href: "/dashboard/payouts", label: "Payouts", icon: Wallet },
+  { href: "/dashboard/support", label: "Support", icon: Ticket },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 

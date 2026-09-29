@@ -1,7 +1,12 @@
 "use client";
 
-import { fieldHintClass, fieldLabelClass, inputClass } from "@/components/auth/styles";
+import { Select } from "@/components/ui/select";
 import { CURRENCIES, type BusinessCurrency } from "@/lib/currencies";
+
+const OPTIONS = CURRENCIES.map((c) => ({
+  value: c.code,
+  label: `${c.symbol} ${c.code} — ${c.name}`,
+}));
 
 export function CurrencySelect({
   id,
@@ -19,24 +24,14 @@ export function CurrencySelect({
   disabled?: boolean;
 }) {
   return (
-    <div>
-      <label htmlFor={id} className={fieldLabelClass}>
-        {label}
-      </label>
-      <select
-        id={id}
-        className={inputClass}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value as BusinessCurrency)}
-      >
-        {CURRENCIES.map((c) => (
-          <option key={c.code} value={c.code}>
-            {c.symbol} {c.code} — {c.name}
-          </option>
-        ))}
-      </select>
-      {hint ? <p className={fieldHintClass}>{hint}</p> : null}
-    </div>
+    <Select<BusinessCurrency>
+      id={id}
+      label={label}
+      options={OPTIONS}
+      value={value}
+      onChange={onChange}
+      hint={hint}
+      disabled={disabled}
+    />
   );
 }

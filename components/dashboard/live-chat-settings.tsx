@@ -6,10 +6,10 @@ import {
   fieldErrorClass,
   fieldHintClass,
   fieldLabelClass,
-  inputClass,
   primaryButtonClass,
   textareaClass,
 } from "@/components/auth/styles";
+import { Select } from "@/components/ui/select";
 import { delayMs, useAuthStore } from "@/lib/auth-store";
 import {
   getLiveChatProvider,
@@ -87,23 +87,13 @@ export function LiveChatSettings() {
         </label>
 
         <div>
-          <label htmlFor="live-chat-provider" className={fieldLabelClass}>
-            Chat provider
-          </label>
-          <select
+          <Select
             id="live-chat-provider"
-            className={inputClass}
+            label="Chat provider"
+            options={LIVE_CHAT_PROVIDERS.map((p) => ({ value: p.id, label: p.name }))}
             value={provider}
-            onChange={(e) =>
-              setProvider(e.target.value as LiveChatProviderId)
-            }
-          >
-            {LIVE_CHAT_PROVIDERS.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
+            onChange={setProvider}
+          />
           <p className={fieldHintClass}>
             {meta.hint}{" "}
             {meta.signupUrl ? (

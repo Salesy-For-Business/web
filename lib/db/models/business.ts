@@ -65,6 +65,10 @@ export interface IBusiness {
   subscriptionRenewsAt?: Date;
   lastRenewalReminderSentAt?: Date;
 
+  /** Set by a superadmin — blocks new checkouts and shows a banner on the
+   * seller dashboard when true. */
+  suspended: boolean;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -151,6 +155,8 @@ const businessSchema = new Schema<IBusiness>(
     },
     subscriptionRenewsAt: { type: Date },
     lastRenewalReminderSentAt: { type: Date },
+
+    suspended: { type: Boolean, default: false, index: true },
   },
   { timestamps: true },
 );

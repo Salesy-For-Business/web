@@ -8,6 +8,7 @@ import {
 } from "mongoose";
 
 export type AuthProviderDoc = "email" | "google";
+export type ModeratorRole = "support" | "finance" | "superadmin";
 
 export interface IUser {
   firstName: string;
@@ -17,6 +18,12 @@ export interface IUser {
   passwordHash: string | null;
   provider: AuthProviderDoc;
   emailVerified: boolean;
+  /** Platform staff flag — gates the "Admin Panel" sidebar link and every
+   * `/admin` route, on top of the separate shared-PIN gate. */
+  isModerator: boolean;
+  moderatorRole?: ModeratorRole;
+  /** Blocks sign-in when true — set by a superadmin from the admin panel. */
+  suspended: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +44,9 @@ const userSchema = new Schema<IUser>(
     passwordHash: { type: String, default: null },
     provider: { type: String, enum: ["email", "google"], required: true },
     emailVerified: { type: Boolean, default: false },
+    isModerator: { type: Boolean, default: false, index: true },
+    moderatorRole: { type: String, enum: ["support", "finance", "superadmin"] },
+    suspended: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

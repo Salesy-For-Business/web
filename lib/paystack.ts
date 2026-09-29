@@ -152,8 +152,8 @@ export async function updateSubaccountPercentageCharge(
 // Recurring billing — plans, customers, subscriptions
 // ---------------------------------------------------------------------------
 
-/** Creates a Paystack recurring Plan. Only ever used from a one-off local
- * setup script, never at request time — see `lib/plan-codes.ts`. */
+/** Creates a Paystack recurring Plan. Called from the superadmin "Sync to
+ * Paystack" action (or the optional one-off script) — never during checkout. */
 export async function createPlan(input: {
   name: string;
   amountMinorUnits: number;
@@ -167,6 +167,27 @@ export async function createPlan(input: {
       amount: input.amountMinorUnits,
       currency: input.currency,
       interval: input.interval ?? "monthly",
+    }),
+  });
+}
+
+/** Updates an existing Plan's name/amount. `updateExistingSubscriptions`
+ * controls whether current subscribers move to the new amount on their next
+ * charge (Paystack defaults this to true). */
+export async function updatePlan(
+  planCode: string,
+  input: {
+    name?: string;
+    amountMinorUnits?: number;
+    updateExistingSubscriptions?: boolean;
+  },
+) {
+  return paystackFetch<unknown>(`/plan/${encodeURIComponent(planCode)}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      name: input.name,
+      amount: input.amountMinorUnits,
+      update_existing_subscriptions: input.updateExistingSubscriptions ?? true,
     }),
   });
 }

@@ -6,7 +6,7 @@ import {
   slugifyProductName,
   uniqueProductSlug,
 } from "@/lib/auth/owned-business";
-import { productListingLimit } from "@/lib/plans";
+import { getPlanConfig, listingLimitFor } from "@/lib/plan-config";
 
 function toPublicProduct(doc: ProductLean) {
   return {
@@ -37,10 +37,12 @@ export async function GET() {
       .sort({ createdAt: -1 })
       .lean<ProductLean[]>();
 
+    const limit = await listingLimitFor(owned.business.plan);
     return jsonOk({
       products: products.map(toPublicProduct),
       count: products.length,
-      limit: productListingLimit(owned.business.plan),
+      // `null` = unlimited (Infinity doesn't survive JSON).
+      limit: Number.isFinite(limit) ? limit : null,
     });
   } catch (err) {
     console.error("[products GET]", err);
@@ -74,13 +76,14 @@ export async function POST(request: Request) {
     }
 
     await connectDb();
-    const limit = productListingLimit(owned.business.plan);
+    const plan = await getPlanConfig(owned.business.plan);
+    const limit = plan.listingLimit ?? Infinity;
     const count = await Product.countDocuments({
       businessId: owned.business._id,
     });
     if (count >= limit) {
       return jsonError(
-        `Free plan allows ${limit} listings. Upgrade to add more.`,
+        `${plan.name} plan allows ${limit} listings. Upgrade to add more.`,
         403,
       );
     }

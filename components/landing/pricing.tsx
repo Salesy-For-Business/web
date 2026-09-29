@@ -1,70 +1,35 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Check } from "lucide-react";
 import clsx from "clsx";
+import { defaultPublicPlans, type PublicPlan } from "@/lib/plan-defaults";
 
 type Billing = "monthly" | "yearly";
-
-const plans = [
-  {
-    id: "free",
-    name: "Free",
-    blurb: "Everything you need to start selling.",
-    cta: "Start free",
-    featured: false,
-    badge: null,
-    price: { monthly: 0, yearly: 0 },
-    items: [
-      "5 product listings",
-      "Secure checkout",
-      "Order alerts on WhatsApp, Telegram, and email",
-      "Basic analytics",
-      "Buyer reviews",
-      "A salesy.link handle",
-    ],
-  },
-  {
-    id: "boutique",
-    name: "Boutique",
-    blurb: "For sellers who are in it for the long run.",
-    cta: "Choose Boutique",
-    featured: true,
-    badge: "Popular",
-    price: { monthly: 5000, yearly: 50000 },
-    items: [
-      "Unlimited listings",
-      "Everything in Free",
-      "Priority support",
-      "Bulk CSV product upload",
-      "CSV sales report export",
-      "Remove Salesy branding",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    blurb: "More visibility and reach for your shop.",
-    cta: "Choose Pro",
-    featured: false,
-    badge: "Top plan",
-    price: { monthly: 15000, yearly: 150000 },
-    items: [
-      "Everything in Boutique",
-      "Store Status posts",
-      "Product video",
-      "Featured on the Status feed",
-    ],
-  },
-] as const;
 
 function formatNaira(amount: number) {
   return amount.toLocaleString("en-NG");
 }
 
-export default function Pricing() {
+export default function Pricing({ plans: input }: { plans?: PublicPlan[] }) {
   const [billing, setBilling] = useState<Billing>("monthly");
   const period = billing === "yearly" ? "year" : "month";
+  const plans = (input ?? defaultPublicPlans())
+    .filter((p) => p.active)
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      blurb: p.blurb,
+      cta: p.ctaLabel,
+      featured: p.featured,
+      badge: p.badge,
+      price: {
+        monthly: p.prices.NGN?.monthly ?? 0,
+        yearly: p.prices.NGN?.yearly ?? 0,
+      },
+      items: p.features,
+    }));
 
   return (
     <section
@@ -121,7 +86,12 @@ export default function Pricing() {
         </div>
       </div>
 
-      <div className="mx-auto mt-12 grid max-w-6xl gap-4 lg:grid-cols-3 lg:items-stretch">
+      <div
+        className={clsx(
+          "mx-auto mt-12 grid gap-4 lg:items-stretch",
+          plans.length >= 3 ? "max-w-6xl lg:grid-cols-3" : "max-w-4xl md:grid-cols-2",
+        )}
+      >
         {plans.map((plan) => {
           const isFree = plan.id === "free";
           const amount = isFree ? 0 : plan.price[billing];
@@ -190,7 +160,7 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              <a
+              <Link
                 href="/signup"
                 className={clsx(
                   "mt-8 inline-flex h-12 items-center justify-center rounded-lg border px-6 text-[15px] font-medium",
@@ -200,7 +170,7 @@ export default function Pricing() {
                 )}
               >
                 {plan.cta}
-              </a>
+              </Link>
             </article>
           );
         })}

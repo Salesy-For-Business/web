@@ -38,7 +38,8 @@ export function useProductsQuery() {
         ApiOk<{
           products: PublicProduct[];
           count: number;
-          limit: number;
+          /** `null` = unlimited. */
+          limit: number | null;
         }>
       >("/products");
       return data;

@@ -1,15 +1,15 @@
 import { connectDb, Business, User } from "@/lib/db";
 import { requireOwnedBusiness } from "@/lib/auth/owned-business";
 import { createSubaccount } from "@/lib/paystack";
+import { commissionPercentFor } from "@/lib/plan-config";
 import { payoutSchema } from "@/lib/payout-schemas";
 import { jsonError, jsonOk } from "@/lib/api/http";
 import { statusFor, toPublicBusiness, toPublicUser } from "@/lib/auth/session-user";
 
 /**
  * One-time setup: saves a business's bank details and creates its Paystack
- * subaccount (fixed 5% platform charge — the Free-plan default; upgrading
- * to a paid plan later updates this via `updateSubaccountPercentageCharge`,
- * never here). Required before a store can accept orders — see the
+ * subaccount, charged at the current plan's admin-configured commission
+ * (plan changes later update it via `updateSubaccountPercentageCharge`). Required before a store can accept orders — see the
  * `paystackSubaccountCode` gate in `/api/checkout/initialize`.
  */
 export async function POST(request: Request) {
@@ -35,11 +35,12 @@ export async function POST(request: Request) {
 
     await connectDb();
 
+    const percentageCharge = await commissionPercentFor(owned.business.plan);
     const subaccount = await createSubaccount({
       businessName: owned.business.businessName,
       bankCode: values.bankCode,
       accountNumber: values.accountNumber,
-      percentageCharge: 5,
+      percentageCharge,
     });
 
     const updated = await Business.findByIdAndUpdate(
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
         bankCode: values.bankCode,
         bankCountry: values.bankCountry.toUpperCase(),
         paystackSubaccountCode: subaccount.subaccount_code,
-        paystackSubaccountPercentageCharge: 5,
+        paystackSubaccountPercentageCharge: percentageCharge,
       },
       { new: true },
     ).lean();

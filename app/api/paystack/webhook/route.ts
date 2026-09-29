@@ -4,7 +4,7 @@ import { markOrderPaid } from "@/lib/orders";
 import { markFeaturedListingPaid } from "@/lib/featured-listings";
 import { connectDb, Business, type BusinessDocument } from "@/lib/db";
 import { updateSubaccountPercentageCharge } from "@/lib/paystack";
-import { planCodeFor, type PaidPlanTier } from "@/lib/plan-codes";
+import { commissionPercentFor, tierForPlanCode } from "@/lib/plan-config";
 import {
   sendSubscriptionPaymentFailedEmail,
 } from "@/lib/email/brevo";
@@ -26,19 +26,6 @@ function planCodeFromEventData(
   data: NonNullable<PaystackWebhookEvent["data"]>,
 ) {
   return typeof data.plan === "string" ? data.plan : data.plan?.plan_code;
-}
-
-/** Which (tier, currency) a Paystack plan code belongs to, per the static
- * map in `lib/plan-codes.ts`. */
-function tierForPlanCode(planCode: string): PaidPlanTier | null {
-  const tiers: PaidPlanTier[] = ["boutique", "pro"];
-  const currencies = ["NGN", "GHS", "ZAR", "KES"] as const;
-  for (const tier of tiers) {
-    for (const currency of currencies) {
-      if (planCodeFor(tier, currency) === planCode) return tier;
-    }
-  }
-  return null;
 }
 
 async function findBusinessForEvent(
@@ -71,16 +58,17 @@ async function findBusinessForEvent(
  * manually once their card is sorted, from the dashboard. */
 async function downgradeToFree(business: BusinessDocument) {
   const wasPlan = business.plan;
+  const freeCommission = await commissionPercentFor("free");
   business.plan = "free";
   business.subscriptionStatus = "past_due";
-  business.paystackSubaccountPercentageCharge = 5;
+  business.paystackSubaccountPercentageCharge = freeCommission;
   await business.save();
 
   if (business.paystackSubaccountCode) {
     try {
       await updateSubaccountPercentageCharge(
         business.paystackSubaccountCode,
-        5,
+        freeCommission,
       );
     } catch (err) {
       console.error(
@@ -103,14 +91,17 @@ async function downgradeToFree(business: BusinessDocument) {
 
 export async function POST(request: Request) {
   try {
-    const secret = process.env.PAYSTACK_WEBHOOK_SECRET;
+    // Paystack signs webhooks with your account's Secret Key, not a
+    // separately issued "webhook secret" (there isn't one to generate in
+    // the dashboard) — see https://paystack.com/docs/payments/webhooks/.
+    const secret = process.env.PAYSTACK_SECRET_KEY;
     if (!secret) {
       // Fail closed: this webhook now grants/revokes paid-plan access and
       // flips subaccount split rates — accepting an unsigned payload would
       // let anyone POST themselves a free upgrade. Misconfiguration must be
       // loud, not silently permissive.
       console.error(
-        "[paystack/webhook] PAYSTACK_WEBHOOK_SECRET is not set — rejecting all events",
+        "[paystack/webhook] PAYSTACK_SECRET_KEY is not set — rejecting all events",
       );
       return jsonError("Webhook is not configured.", 500);
     }
@@ -145,10 +136,11 @@ export async function POST(request: Request) {
 
       case "subscription.create": {
         const planCode = planCodeFromEventData(data);
-        const tier = planCode ? tierForPlanCode(planCode) : null;
+        const tier = planCode ? await tierForPlanCode(planCode) : null;
         const business = await findBusinessForEvent(data);
         if (!business || !tier) break;
 
+        const tierCommission = await commissionPercentFor(tier);
         business.plan = tier;
         business.subscriptionStatus = "active";
         business.paystackSubscriptionCode = data.subscription_code;
@@ -156,14 +148,14 @@ export async function POST(request: Request) {
         business.subscriptionRenewsAt = data.next_payment_date
           ? new Date(data.next_payment_date)
           : undefined;
-        business.paystackSubaccountPercentageCharge = 0;
+        business.paystackSubaccountPercentageCharge = tierCommission;
         await business.save();
 
         if (business.paystackSubaccountCode) {
           try {
             await updateSubaccountPercentageCharge(
               business.paystackSubaccountCode,
-              0,
+              tierCommission,
             );
           } catch (err) {
             console.error(

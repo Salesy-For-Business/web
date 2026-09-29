@@ -14,11 +14,9 @@ import {
   useDashboardOverview,
   type RevenuePeriod,
 } from "@/lib/dashboard/queries";
-import {
-  planLabel,
-  productListingLimit,
-  useAuthStore,
-} from "@/lib/auth-store";
+import { useAuthStore } from "@/lib/auth-store";
+import { listingLimitValue } from "@/lib/plan-defaults";
+import { usePlanConfig } from "@/lib/plans-queries";
 
 const periods: { id: RevenuePeriod; label: string }[] = [
   { id: "today", label: "Today" },
@@ -115,7 +113,10 @@ export function OverviewPage() {
 
   const plan = business?.plan ?? "free";
   const handle = business?.storeHandle ?? "mystore";
-  const listingLimit = productListingLimit(plan);
+  const planConfig = usePlanConfig(plan);
+  const planName = planConfig.name;
+  const commission = planConfig.commissionPercent;
+  const listingLimit = listingLimitValue(planConfig.listingLimit);
   const productCount = data?.productCount ?? 0;
   const listingLabel =
     listingLimit === Infinity
@@ -279,16 +280,19 @@ export function OverviewPage() {
               </p>
             </div>
             <p className="rounded-md bg-surface px-2.5 py-1 text-[12px] font-medium uppercase tracking-wide text-muted">
-              {planLabel(plan)}
+              {planName}
             </p>
           </div>
           {plan === "free" ? (
-            <Link href="/#pricing" className={clsx(primaryButtonClass, "mt-6")}>
-              Upgrade to Boutique
+            <Link href="/dashboard/settings" className={clsx(primaryButtonClass, "mt-6")}>
+              Upgrade your plan
             </Link>
           ) : (
             <p className="mt-6 text-[13px] leading-5 text-muted">
-              You’re on {planLabel(plan)}. No Salesy commission on sales.
+              You’re on {planName}.{" "}
+              {commission > 0
+                ? `Salesy keeps ${commission}% of each sale.`
+                : "No Salesy commission on sales."}
             </p>
           )}
         </section>
@@ -331,9 +335,9 @@ export function OverviewPage() {
               {money(earnings.platformFee)}
             </p>
             <p className="mt-2 text-[13px] text-muted">
-              {plan === "free"
-                ? "5% per sale on your Free plan"
-                : `No commission on ${planLabel(plan)}`}
+              {commission > 0
+                ? `${commission}% per sale on your ${planName} plan`
+                : `No commission on ${planName}`}
             </p>
           </div>
           <div className="rounded-lg border border-border bg-surface p-5">
