@@ -1,10 +1,10 @@
 export const landingOptions = [
   {
     id: "business",
-    label: "Grow my business",
+    label: "Feature your products",
     description:
-      "Tools and guidance to market, manage, and scale the business you already have.",
-    cta: "Explore Grow my business",
+      "Pay a small weekly fee to pin your best products at the top of Salesy's Marketplace, where shoppers from every store come to browse.",
+    cta: "Explore Feature Products",
   },
   {
     id: "store",

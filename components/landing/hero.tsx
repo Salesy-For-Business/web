@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShoppingBag, Store } from "lucide-react";
+import { ArrowRight, ShoppingBag, Store } from "lucide-react";
 
 export default function Hero() {
   return (
@@ -16,32 +16,44 @@ export default function Hero() {
         data-aos-delay="80"
       >
         Create an online store with a unique, shareable URL. Simple for
-        entrepreneurs — detailed when your business needs more.
+        entrepreneurs, detailed when your business needs more.
       </p>
       <div
-        className="mt-10 flex flex-col items-center justify-center gap-2 md:flex-row"
+        className="mt-10 flex w-full max-w-xs flex-col items-stretch gap-3 sm:max-w-none sm:flex-row sm:justify-center"
         data-aos="fade-up"
         data-aos-delay="160"
       >
         <Link
           href="/signup"
-          className="inline-flex h-12 items-center rounded-full border border-border px-6 text-[15px] font-medium text-link hover:bg-tonal hover:text-link"
+          className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-primary px-7 text-[15px] font-medium text-white shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           Start your store
+          <ArrowRight
+            className="size-4 transition-transform group-hover:translate-x-0.5"
+            aria-hidden
+          />
         </Link>
         <Link
           href="/demo"
-          className="inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] font-medium text-foreground hover:bg-tonal hover:text-link"
+          className="inline-flex h-12 items-center justify-center gap-2 rounded-full border border-border bg-background px-7 text-[15px] font-medium text-heading transition-colors hover:border-primary/40 hover:bg-tonal hover:text-link focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          See Demo <Store size={16} />
-        </Link>
-        <Link
-          href="/listings"
-          className="inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] font-medium text-foreground hover:bg-tonal hover:text-link"
-        >
-          Marketplace <ShoppingBag size={16} />
+          <Store className="size-4" aria-hidden />
+          See a demo store
         </Link>
       </div>
+      <Link
+        href="/listings"
+        className="group mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium text-muted transition-colors hover:text-link"
+        data-aos="fade-up"
+        data-aos-delay="220"
+      >
+        {/* <ShoppingBag className="size-4" aria-hidden /> */}
+        Or browse the marketplace
+        <ArrowRight
+          className="size-3.5 transition-transform group-hover:translate-x-0.5 hidden md:block"
+          aria-hidden
+        />
+      </Link>
     </section>
   );
 }

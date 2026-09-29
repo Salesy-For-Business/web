@@ -69,7 +69,7 @@ export function ChartEmpty({ message = "No data for this period yet.", className
   return (
     <div
       className={clsx(
-        "flex h-full min-h-40 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-surface text-center",
+        "flex min-h-40 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-surface py-6 text-center",
         className,
       )}
     >

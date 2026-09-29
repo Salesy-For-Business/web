@@ -1,33 +1,32 @@
 import Image from "next/image";
+import type { LucideIcon } from "lucide-react";
+import { CalendarClock, MousePointerClick, ShoppingBag, TrendingUp } from "lucide-react";
 import { landingOptions } from "./options";
 
+const businessSteps: { icon: LucideIcon; title: string; description: string }[] = [
+  {
+    icon: MousePointerClick,
+    title: "Open Feature Products",
+    description: "From your dashboard, go to Feature Products and pick the item you want more buyers to see.",
+  },
+  {
+    icon: CalendarClock,
+    title: "Choose how long it runs",
+    description: "Pick 1–8 weeks and pay a small weekly fee — no contracts, it just expires when the weeks are up.",
+  },
+  {
+    icon: ShoppingBag,
+    title: "It goes live on the Marketplace",
+    description: "Your product appears in the Featured section at the top of Salesy's Marketplace, right where shoppers are already browsing.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Feature your next best-seller",
+    description: "Once a slot ends, pick another product and put it in front of buyers.",
+  },
+];
+
 const steps = {
-  business: [
-    {
-      photo: "/photos/profile.jpg",
-      alt: "A woman setting up her work on a laptop while on a phone call",
-      title: "Set up your profile",
-      description: "Add who you are and how customers can find you.",
-    },
-    {
-      photo: "/photos/reel.jpg",
-      alt: "A man with a camera, ready to shoot product content",
-      title: "Upload product as a reel",
-      description: "Navigate to the 'Grow Biz' page, Drop in a short video or banner or product.",
-    },
-    {
-      photo: "/photos/rest.jpg",
-      alt: "A woman pausing on a balcony at dusk",
-      title: "Leave the rest to us",
-      description: "We create and manage ads that attract customers to your business.",
-    },
-    {
-      photo: "/photos/working.jpg",
-      alt: "A woman reviewing her work on a laptop",
-      title: "See what's working",
-      description: "Track views, orders, and which reels actually sell.",
-    },
-  ],
   store: [
     {
       photo: "/photos/store.jpg",
@@ -88,12 +87,52 @@ const steps = {
   ],
 } as const;
 
+function BusinessStepGrid() {
+  return (
+    <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {businessSteps.map((step, index) => {
+        const Icon = step.icon;
+        return (
+          <article
+            key={step.title}
+            className="group relative flex flex-col rounded-2xl border border-border bg-background p-6 text-left transition-all duration-200 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+            data-aos="fade-up"
+            data-aos-delay={String(index * 80)}
+          >
+            <div className="flex items-center justify-between">
+              <span className="flex size-12 items-center justify-center rounded-full bg-tonal text-link transition-colors group-hover:bg-primary group-hover:text-white">
+                <Icon className="size-5" aria-hidden />
+              </span>
+              <span className="font-display text-lg text-border transition-colors group-hover:text-primary/50">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+            </div>
+            <h3 className="mt-6 text-[18px] leading-7 tracking-normal">
+              {step.title}
+            </h3>
+            <p className="mt-2 text-[14px] leading-6 text-foreground">
+              {step.description}
+            </p>
+            {index < businessSteps.length - 1 ? (
+              <span
+                aria-hidden
+                className="absolute right-0 top-1/2 hidden h-px w-4 -translate-y-1/2 translate-x-full bg-border xl:block"
+              />
+            ) : null}
+          </article>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Sections() {
   return (
     <>
       {landingOptions.map((option) => {
-        const items = steps[option.id];
-        const fourUp = items.length === 4;
+        const isBusiness = option.id === "business";
+        const items = isBusiness ? null : steps[option.id as "store" | "partnership"];
+        const fourUp = items ? (items.length as number) === 4 : false;
 
         return (
           <section
@@ -119,67 +158,60 @@ export default function Sections() {
                 {option.description}
               </p>
 
-              <div
-                className={
-                  fourUp
-                    ? "mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-                    : "mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
-                }
-              >
-                {items.map((step, index) => (
-                  <article
-                    key={step.title}
-                    className="flex flex-col overflow-hidden rounded-xl border border-border bg-background text-left"
-                    data-aos="fade-up"
-                    data-aos-delay={String(index * 60)}
-                  >
-                    <div className="relative aspect-4/3 w-full">
-                      <Image
-                        src={step.photo}
-                        alt={step.alt}
-                        fill
-                        className="object-cover"
-                        sizes={
-                          fourUp
-                            ? "(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                            : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                        }
-                      />
-                      <span className="absolute right-3 top-3 flex items-baseline gap-1.5 rounded-md bg-background/90 px-2 py-1 text-muted backdrop-blur-sm">
-                        <span className="text-[11px] font-medium uppercase tracking-wider">
-                          Step
+              {isBusiness ? (
+                <BusinessStepGrid />
+              ) : (
+                <div
+                  className={
+                    fourUp
+                      ? "mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+                      : "mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+                  }
+                >
+                  {items!.map((step, index) => (
+                    <article
+                      key={step.title}
+                      className="flex flex-col overflow-hidden rounded-xl border border-border bg-background text-left"
+                      data-aos="fade-up"
+                      data-aos-delay={String(index * 60)}
+                    >
+                      <div className="relative aspect-4/3 w-full">
+                        <Image
+                          src={step.photo}
+                          alt={step.alt}
+                          fill
+                          className="object-cover"
+                          sizes={
+                            fourUp
+                              ? "(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                              : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                          }
+                        />
+                        <span className="absolute right-3 top-3 flex items-baseline gap-1.5 rounded-md bg-background/90 px-2 py-1 text-muted backdrop-blur-sm">
+                          <span className="text-[11px] font-medium uppercase tracking-wider">
+                            Step
+                          </span>
+                          <span className="font-display text-xl leading-none text-heading">
+                            {index + 1}
+                          </span>
                         </span>
-                        <span className="font-display text-xl leading-none text-heading">
-                          {index + 1}
-                        </span>
-                      </span>
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-[17px] leading-6 tracking-normal">
-                        {step.title}
-                      </h3>
-                      <p className="mt-2 text-[14px] leading-6 text-foreground">
-                        {step.description}
-                      </p>
-                    </div>
-                  </article>
-                ))}
-              </div>
+                      </div>
+                      <div className="p-6">
+                        <h3 className="text-[17px] leading-6 tracking-normal">
+                          {step.title}
+                        </h3>
+                        <p className="mt-2 text-[14px] leading-6 text-foreground">
+                          {step.description}
+                        </p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         );
       })}
-      {/* <p className="bg-surface-muted px-6 pb-16 text-center text-sm text-muted">
-        Photos from{" "}
-        <a
-          href="https://unsplash.com"
-          className="text-link hover:text-link-hover"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Unsplash
-        </a>
-      </p> */}
     </>
   );
 }
