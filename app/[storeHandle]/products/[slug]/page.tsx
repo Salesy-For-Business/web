@@ -86,10 +86,13 @@ export async function generateMetadata({
 
 export default async function StoreProductPage({
   params,
+  searchParams,
 }: {
   params: Promise<StoreProductParams>;
+  searchParams: Promise<{ from?: string }>;
 }) {
   const { storeHandle, slug } = await params;
+  const { from } = await searchParams;
   const store = await resolveStorefront(storeHandle);
   // Store missing is handled by the parent layout UI.
   if (!store) notFound();
@@ -108,7 +111,7 @@ export default async function StoreProductPage({
           __html: JSON.stringify(productJsonLd(store, product, url, image)),
         }}
       />
-      <ProductDetail product={product} />
+      <ProductDetail product={product} fromMarketplace={from === "marketplace"} />
     </>
   );
 }

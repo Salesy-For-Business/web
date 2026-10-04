@@ -7,6 +7,7 @@ import { Check, ChevronLeft, Minus, Plus } from "lucide-react";
 import clsx from "clsx";
 import { ProductGallery } from "@/components/storefront/product-gallery";
 import { ShareButton } from "@/components/storefront/share-sheet";
+import { ProductCard } from "@/components/storefront/product-grid";
 import { useStorefront } from "@/components/storefront/store-context";
 import {
   primaryButtonClass,
@@ -20,7 +21,36 @@ import {
   type StoreProduct,
 } from "@/lib/storefront";
 
-export function ProductDetail({ product }: { product: StoreProduct }) {
+function RelatedProducts({
+  title,
+  products,
+}: {
+  title: string;
+  products: StoreProduct[];
+}) {
+  if (products.length === 0) return null;
+  return (
+    <section className="mt-16">
+      <h2 className="text-[20px] leading-7 text-heading">{title}</h2>
+      <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+        {products.map((p) => (
+          <ProductCard key={p.id} product={p} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export function ProductDetail({
+  product,
+  fromMarketplace = false,
+}: {
+  product: StoreProduct;
+  /** True when the buyer arrived via a Marketplace listing link rather than
+   * browsing the store directly — swaps "You may also like" for "More from
+   * {store}" so a cross-store visitor is pointed at this specific seller. */
+  fromMarketplace?: boolean;
+}) {
   const store = useStorefront();
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
@@ -48,6 +78,11 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
     addItem(cartPayload(), qty);
     router.push(storePath(store.handle, "/checkout"));
   }
+
+  const others = store.products.filter((p) => p.id !== product.id);
+  const sameCategory = others.filter((p) => p.category === product.category);
+  const similar = (sameCategory.length > 0 ? sameCategory : others).slice(0, 4);
+  const moreFromStore = others.slice(0, 4);
 
   return (
     <>
@@ -157,6 +192,15 @@ export function ProductDetail({ product }: { product: StoreProduct }) {
           </div>
         </div>
       </div>
+
+      {fromMarketplace ? (
+        <RelatedProducts
+          title={`More from ${store.businessName}`}
+          products={moreFromStore}
+        />
+      ) : (
+        <RelatedProducts title="You may also like" products={similar} />
+      )}
     </>
   );
 }

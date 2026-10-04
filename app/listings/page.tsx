@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
 import { Header, Footer } from "@/components/landing";
-import { ListingProductGrid } from "@/components/listings/listing-product-card";
-import { ListingsBrowser } from "@/components/listings/listings-browser";
-import { getFeaturedListings, getRandomListings } from "@/lib/listings";
+import { MarketplaceBrowser } from "@/components/listings/marketplace-browser";
+import { getListingCategories, getMarketplaceFeed } from "@/lib/listings";
 
 export const metadata: Metadata = {
   title: "Shop for Anything — Salesy",
   description:
-    "Discover products from independent stores across Salesy, picked at random — plus featured picks from sellers who paid to stand out.",
+    "Discover products from independent stores across Salesy — featured picks from sellers who paid to stand out, shown first.",
   alternates: { canonical: "/listings" },
 };
 
 export default async function ListingsPage() {
-  const [featured, random] = await Promise.all([
-    getFeaturedListings(),
-    getRandomListings(48),
+  const [feed, categories] = await Promise.all([
+    getMarketplaceFeed(48),
+    getListingCategories(),
   ]);
 
   return (
@@ -26,32 +25,12 @@ export default async function ListingsPage() {
             Shop for Anything
           </h1>
           <p className="mt-2 max-w-2xl text-[15px] leading-6 text-muted">
-            Products from stores across Salesy, in no particular order.
+            Products from stores across Salesy — featured picks lead the way.
           </p>
 
-          <section className="mt-10">
-            <h2 className="text-[13px] font-medium uppercase tracking-[0.12em] text-muted">
-              Featured
-            </h2>
-            {featured.length > 0 ? (
-              <div className="mt-4">
-                <ListingProductGrid products={featured} />
-              </div>
-            ) : (
-              <div className="mt-4 rounded-lg border border-dashed border-border bg-surface px-4 py-3 text-center text-[13px] text-muted">
-                This space is reserved for advertisement.
-              </div>
-            )}
-          </section>
-
-          <section className="mt-12">
-            <h2 className="text-[13px] font-medium uppercase tracking-[0.12em] text-muted">
-              Explore
-            </h2>
-            <div className="mt-4">
-              <ListingsBrowser initialProducts={random} />
-            </div>
-          </section>
+          <div className="mt-8">
+            <MarketplaceBrowser initialProducts={feed} categories={categories} />
+          </div>
         </div>
       </main>
       <Footer />

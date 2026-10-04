@@ -7,8 +7,18 @@ import type { ListingProduct } from "@/lib/listings";
 
 export function ListingsBrowser({
   initialProducts,
+  query = "",
+  category = "",
+  layout = "grid",
 }: {
   initialProducts: ListingProduct[];
+  /** Search text and/or category filter — when either is set, pagination
+   * hits the search endpoint instead of the random feed. Pass a `key` that
+   * changes with these on the caller side so the component remounts (and
+   * its state resets) whenever a filter changes. */
+  query?: string;
+  category?: string;
+  layout?: "grid" | "masonry";
 }) {
   const [products, setProducts] = useState(initialProducts);
   const [loading, setLoading] = useState(false);
@@ -25,9 +35,10 @@ export function ListingsBrowser({
     setLoading(true);
     try {
       const exclude = productsRef.current.map((p) => p.id).join(",");
-      const res = await fetch(
-        `/api/listings/more?exclude=${encodeURIComponent(exclude)}`,
-      );
+      const params = new URLSearchParams({ exclude });
+      if (query) params.set("q", query);
+      if (category) params.set("category", category);
+      const res = await fetch(`/api/listings/more?${params.toString()}`);
       const data = (await res.json()) as {
         ok: boolean;
         products?: ListingProduct[];
@@ -48,7 +59,19 @@ export function ListingsBrowser({
     } finally {
       setLoading(false);
     }
-  }, [loading, hasMore]);
+  }, [loading, hasMore, query, category]);
+
+  // A filtered view (search/category) starts with no server-rendered
+  // products, so fetch its first page as soon as it mounts.
+  useEffect(() => {
+    if (initialProducts.length === 0 && (query || category)) {
+      const t = window.setTimeout(() => void loadMore(), 0);
+      return () => window.clearTimeout(t);
+    }
+    // Only on mount for this instance — the parent remounts this component
+    // (via a changing `key`) whenever query/category change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -69,14 +92,18 @@ export function ListingsBrowser({
   if (products.length === 0) {
     return (
       <p className="py-12 text-center text-[14px] text-muted">
-        No products to show yet — check back soon.
+        {loading
+          ? "Loading…"
+          : query || category
+            ? "No products match your search."
+            : "No products to show yet — check back soon."}
       </p>
     );
   }
 
   return (
     <div>
-      <ListingProductGrid products={products} />
+      <ListingProductGrid products={products} layout={layout} />
       <div ref={sentinelRef} className="h-1" aria-hidden />
       {loading ? (
         <p className="mt-8 text-center text-[13px] text-muted">Loading more…</p>
