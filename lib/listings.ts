@@ -139,22 +139,6 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** Every category currently on offer across eligible stores — backs the
- * Marketplace filter dropdown. */
-export async function getListingCategories(): Promise<string[]> {
-  const businesses = await eligibleBusinesses();
-  if (businesses.length === 0) return [];
-
-  const categories = await Product.distinct("category", {
-    businessId: { $in: [...businesses.map((b) => String(b._id))] },
-    inStock: true,
-  });
-
-  return (categories as string[])
-    .filter((c): c is string => Boolean(c?.trim()))
-    .sort((a, b) => a.localeCompare(b));
-}
-
 /** Text search + category filter, paginated the same exclude-ids way as
  * `getRandomListings` so the Marketplace's infinite scroll works identically
  * whether browsing or searching. Sorted newest-first instead of sampled,

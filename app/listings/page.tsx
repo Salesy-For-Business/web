@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Header, Footer } from "@/components/landing";
 import { MarketplaceBrowser } from "@/components/listings/marketplace-browser";
-import { getListingCategories, getMarketplaceFeed } from "@/lib/listings";
+import { getMarketplaceFeed } from "@/lib/listings";
+import { PRODUCT_CATEGORIES } from "@/lib/categories";
 
 export const metadata: Metadata = {
   title: "Shop for Anything — Salesy",
@@ -11,10 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ListingsPage() {
-  const [feed, categories] = await Promise.all([
-    getMarketplaceFeed(48),
-    getListingCategories(),
-  ]);
+  const feed = await getMarketplaceFeed(48);
 
   return (
     <div className="flex flex-1 flex-col bg-background">
@@ -29,7 +27,10 @@ export default async function ListingsPage() {
           </p>
 
           <div className="mt-8">
-            <MarketplaceBrowser initialProducts={feed} categories={categories} />
+            <MarketplaceBrowser
+              initialProducts={feed}
+              categories={[...PRODUCT_CATEGORIES]}
+            />
           </div>
         </div>
       </main>

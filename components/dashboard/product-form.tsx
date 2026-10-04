@@ -24,7 +24,14 @@ import {
   useUpdateProductMutation,
   type PublicProduct,
 } from "@/lib/products/queries";
+import { OTHER_CATEGORY, PRODUCT_CATEGORIES, isKnownCategory } from "@/lib/categories";
+import { Select, type SelectOption } from "@/components/ui/select";
 import clsx from "clsx";
+
+const categoryOptions: SelectOption[] = [
+  ...PRODUCT_CATEGORIES.map((c) => ({ value: c, label: c })),
+  { value: OTHER_CATEGORY, label: OTHER_CATEGORY },
+];
 
 type ProductFormProps = {
   mode: "create" | "edit";
@@ -73,7 +80,7 @@ export function ProductForm({ mode, product }: ProductFormProps) {
       description: product?.description ?? "",
       price: product?.price ?? 0,
       compareAt: product?.compareAt ?? undefined,
-      category: product?.category ?? "General",
+      category: product?.category ?? "",
       inStock: product?.inStock ?? true,
       stockQty: product?.stockQty ?? undefined,
       images: product?.images ?? [],
@@ -187,15 +194,35 @@ export function ProductForm({ mode, product }: ProductFormProps) {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="category" className={fieldLabelClass}>
-          Category
-        </label>
-        <input id="category" className={inputClass} {...register("category")} />
-        {errors.category ? (
-          <p className={fieldErrorClass}>{errors.category.message}</p>
-        ) : null}
-      </div>
+      <Controller
+        name="category"
+        control={control}
+        render={({ field }) => {
+          const isCustom = field.value ? !isKnownCategory(field.value) : false;
+          const selectValue = isCustom ? OTHER_CATEGORY : field.value;
+          return (
+            <div>
+              <Select
+                label="Category"
+                ariaLabel="Category"
+                placeholder="Select a category"
+                options={categoryOptions}
+                value={selectValue}
+                onChange={(value) => field.onChange(value === OTHER_CATEGORY ? "" : value)}
+                error={errors.category?.message}
+              />
+              {selectValue === OTHER_CATEGORY ? (
+                <input
+                  className={clsx(inputClass, "mt-2")}
+                  placeholder="Enter a category"
+                  value={field.value}
+                  onChange={(e) => field.onChange(e.target.value)}
+                />
+              ) : null}
+            </div>
+          );
+        }}
+      />
 
       <div>
         <label htmlFor="description" className={fieldLabelClass}>

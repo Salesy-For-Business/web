@@ -21,7 +21,7 @@ function LayoutToggle({
     <div
       role="radiogroup"
       aria-label="Layout"
-      className="inline-flex shrink-0 rounded-lg border border-border bg-background p-0.5"
+      className="inline-flex justify-end shrink-0 rounded-lg border border-border bg-background p-0.5 w-fit"
     >
       {(
         [
@@ -61,7 +61,7 @@ export function MarketplaceBrowser({
   const [rawQuery, setRawQuery] = useState("");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
-  const [layout, setLayout] = useState<Layout>("grid");
+  const [layout, setLayout] = useState<Layout>("masonry");
 
   // Debounce the free-text search so it doesn't refetch on every keystroke.
   useEffect(() => {
@@ -130,7 +130,10 @@ export function MarketplaceBrowser({
           </button>
         ) : null}
 
+        <div className="flex justify-end">
+          
         <LayoutToggle layout={layout} onChange={setLayout} />
+</div>
       </div>
 
       <div className="mt-10">
