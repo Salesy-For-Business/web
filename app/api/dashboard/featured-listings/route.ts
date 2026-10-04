@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       email: owned.business.ownerEmail || owned.business.businessEmail,
       amountMinorUnits,
       reference,
-      callbackUrl: `${appUrl}/dashboard/featured-listings?featured=1`,
+      callbackUrl: `${appUrl}/dashboard/featured-listings?reference=${encodeURIComponent(reference)}`,
       channels: ["card", "bank_transfer", "ussd"],
       currency,
       metadata: { kind: "featured-listing", productId: String(product._id) },
