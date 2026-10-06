@@ -67,3 +67,10 @@ export {
   type AdminAuditLogDocument,
   type AdminAuditLogLean,
 } from "@/lib/db/models/admin-audit-log";
+export {
+  BlogPost,
+  type IBlogPost,
+  type BlogPostDocument,
+  type BlogPostLean,
+  type BlogPostStatus,
+} from "@/lib/db/models/blog-post";

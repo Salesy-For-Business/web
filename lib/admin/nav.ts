@@ -13,6 +13,7 @@ import {
   ScrollText,
   Layers,
   PlugZap,
+  Newspaper,
 } from "lucide-react";
 import type { ModeratorRole } from "@/lib/auth-store";
 
@@ -32,6 +33,7 @@ export const adminNav: AdminNavItem[] = [
   { href: "/admin/users", label: "Users", icon: Users, roles: ["superadmin"] },
   { href: "/admin/orders", label: "Orders", icon: ShoppingBag, roles: ["superadmin"] },
   { href: "/admin/products", label: "Products", icon: Package, roles: ["superadmin"] },
+  { href: "/admin/blog", label: "Blog", icon: Newspaper, roles: ["superadmin"] },
   { href: "/admin/plans", label: "Plans", icon: Layers, roles: ["superadmin"] },
   { href: "/admin/moderators", label: "Moderators", icon: ShieldCheck, roles: ["superadmin"] },
   { href: "/admin/settings", label: "Settings", icon: Settings, roles: ["superadmin"] },
