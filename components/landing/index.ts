@@ -1,5 +1,6 @@
 export { default as Header } from "./header";
 export { default as Hero } from "./hero";
+export { default as ProductShowcase } from "./product-showcase";
 export { default as Help } from "./help";
 export { default as Features } from "./features";
 export { default as Sections } from "./sections";

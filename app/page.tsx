@@ -7,6 +7,7 @@ import {
   Help,
   Hero,
   Pricing,
+  ProductShowcase,
   Sections,
 } from "@/components/landing";
 import { AosInit } from "@/components/landing/aos-init";
@@ -33,6 +34,7 @@ export default async function Home() {
       <Header />
       <main className="flex flex-1 flex-col">
         <Hero />
+        <ProductShowcase />
         <Help />
         <Features />
         <Sections />
