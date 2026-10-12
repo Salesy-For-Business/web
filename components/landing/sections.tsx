@@ -89,7 +89,7 @@ const steps = {
 
 function BusinessStepGrid() {
   return (
-    <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="mt-12 grid gap-4 sm:grid-cols-3 xl:grid-cols-4">
       {businessSteps.map((step, index) => {
         const Icon = step.icon;
         return (
@@ -107,7 +107,7 @@ function BusinessStepGrid() {
                 {String(index + 1).padStart(2, "0")}
               </span>
             </div>
-            <h3 className="mt-6 text-[18px] leading-7 tracking-normal">
+            <h3 className="mt-6 text-[18px] text-white leading-7 tracking-normal">
               {step.title}
             </h3>
             <p className="mt-2 text-[14px] leading-6 text-foreground">
@@ -171,36 +171,41 @@ export default function Sections() {
                   {items!.map((step, index) => (
                     <article
                       key={step.title}
-                      className="flex flex-col overflow-hidden rounded-xl border border-border bg-background text-left"
+                      className="group relative aspect-[3/4] overflow-hidden rounded-xl text-left"
                       data-aos="fade-up"
                       data-aos-delay={String(index * 60)}
                     >
-                      <div className="relative aspect-4/3 w-full">
-                        <Image
-                          src={step.photo}
-                          alt={step.alt}
-                          fill
-                          className="object-cover"
-                          sizes={
-                            fourUp
-                              ? "(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                              : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                          }
-                        />
-                        <span className="absolute right-3 top-3 flex items-baseline gap-1.5 rounded-md bg-background/90 px-2 py-1 text-muted backdrop-blur-sm">
-                          <span className="text-[11px] font-medium uppercase tracking-wider">
-                            Step
-                          </span>
-                          <span className="font-display text-xl leading-none text-heading">
-                            {index + 1}
-                          </span>
-                        </span>
-                      </div>
-                      <div className="p-6">
-                        <h3 className="text-[17px] leading-6 tracking-normal">
+                      <Image
+                        src={step.photo}
+                        alt={step.alt}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                        sizes={
+                          fourUp
+                            ? "(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
+                            : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        }
+                      />
+                      {/* Clear at the top, darkening toward the bottom so the
+                          overlaid text stays readable on any photo. */}
+                      <div
+                        aria-hidden
+                        className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-transparent"
+                      />
+                      <span
+                        className="absolute right-4 top-2 font-display text-[44px] font-bold leading-none text-white/90 [text-shadow:0_2px_12px_rgb(0_0_0_/_0.45)]"
+                        aria-hidden
+                      >
+                        {index + 1}
+                      </span>
+                      <div className="absolute inset-x-0 bottom-0 p-5">
+                        <h3
+                          className="text-[18px] leading-6 tracking-normal"
+                          style={{ color: "#fff" }}
+                        >
                           {step.title}
                         </h3>
-                        <p className="mt-2 text-[14px] leading-6 text-foreground">
+                        <p className="mt-2 text-[14px] leading-6 text-white/80">
                           {step.description}
                         </p>
                       </div>
