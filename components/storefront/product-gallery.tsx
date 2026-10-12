@@ -89,13 +89,17 @@ export function ProductGallery({
           )}
         >
           {images.map((src, index) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <div
               key={`${src}-${index}`}
-              src={src}
-              alt={`${product.name} — photo ${index + 1} of ${images.length}`}
-              className="size-full shrink-0 snap-start object-cover"
-            />
+              className="relative size-full shrink-0 basis-full snap-start"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={src}
+                alt={`${product.name} — photo ${index + 1} of ${images.length}`}
+                className="absolute inset-0 size-full object-cover"
+              />
+            </div>
           ))}
         </div>
 

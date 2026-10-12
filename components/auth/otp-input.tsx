@@ -19,7 +19,7 @@ export function OtpInput({
   onChange,
   onBlur,
   error,
-  hint = "Demo code: 123456",
+  hint = "Didn’t get a code? Check your spam folder.",
   disabled,
   length = 6,
 }: OtpInputProps) {

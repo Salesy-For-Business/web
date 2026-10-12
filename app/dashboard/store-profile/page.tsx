@@ -7,6 +7,7 @@ import {
   DashboardPageHeader,
 } from "@/components/dashboard/page-chrome";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/auth/styles";
+import { StoreChangeRequestForm } from "@/components/dashboard/store-change-request-form";
 import { useAuthStore, planLabel } from "@/lib/auth-store";
 import { Store } from "lucide-react";
 
@@ -140,6 +141,10 @@ export default function StoreProfilePage() {
             Signed in as {user?.firstName} {user?.lastName}
           </p>
         </section>
+      </div>
+
+      <div className="mt-6">
+        <StoreChangeRequestForm />
       </div>
     </div>
   );

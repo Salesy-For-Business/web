@@ -4,12 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
 import { ShieldCheck } from "lucide-react";
-import {
-  fieldErrorClass,
-  fieldLabelClass,
-  inputClass,
-  primaryButtonClass,
-} from "@/components/auth/styles";
+import { primaryButtonClass } from "@/components/auth/styles";
+import { OtpInput } from "@/components/auth/otp-input";
 import { useAdminMeQuery, useVerifyAdminPinMutation, getApiError } from "@/lib/admin/queries";
 import { landingPathForRole } from "@/lib/admin/nav";
 
@@ -68,25 +64,14 @@ export default function AdminGatePage() {
         </p>
 
         <div className="mt-5">
-          <label htmlFor="admin-pin" className={fieldLabelClass}>
-            6-digit code
-          </label>
-          <input
-            id="admin-pin"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            maxLength={6}
-            className={clsx(inputClass, "text-center tracking-[0.4em]")}
+          <OtpInput
             value={code}
-            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            onChange={setCode}
+            error={error ?? undefined}
+            hint="Ask a superadmin if you don't have the code."
+            disabled={verify.isPending}
           />
         </div>
-
-        {error ? (
-          <p className={fieldErrorClass} role="alert">
-            {error}
-          </p>
-        ) : null}
 
         <button
           type="submit"

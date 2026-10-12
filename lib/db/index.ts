@@ -74,3 +74,10 @@ export {
   type BlogPostLean,
   type BlogPostStatus,
 } from "@/lib/db/models/blog-post";
+export {
+  StoreChangeRequest,
+  type IStoreChangeRequest,
+  type StoreChangeRequestDocument,
+  type StoreChangeRequestLean,
+  type StoreChangeRequestStatus,
+} from "@/lib/db/models/store-change-request";
