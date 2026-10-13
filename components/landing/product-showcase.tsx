@@ -149,10 +149,10 @@ export default function ProductShowcase() {
       className="relative overflow-hidden px-6 pb-28 pt-6 sm:px-10 lg:px-16"
       data-aos="fade-up"
     >
-      <div
+      {/* <div
         aria-hidden
         className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[560px] bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,color-mix(in_srgb,var(--primary)_18%,transparent),transparent)]"
-      />
+      /> */}
 
       <div className="mx-auto max-w-5xl text-center">
         <p className="text-[12px] font-medium uppercase tracking-[0.16em] text-muted">
@@ -187,6 +187,25 @@ export default function ProductShowcase() {
               ₦24,000 · just now
             </p>
           </div>
+        </div>
+
+        {/* Phone mockup — real screenshots (not the hand-built recreation
+            above), swapped with the same theme toggle, peeking out from the
+            opposite corner for a cross-device feel. */}
+        <div
+          className="absolute -bottom-8 -left-6 z-20 hidden w-[132px] rotate-[-4deg] overflow-hidden rounded-[24px] border-[6px] sm:block lg:w-[160px]"
+          style={{ ...bg, ...borderColor, boxShadow: "var(--mock-shadow)" }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={
+              theme === "light"
+                ? "/mockups/dashboard-mobile-light.png"
+                : "/mockups/dashboard-mobile-dark.png"
+            }
+            alt="Salesy dashboard on mobile"
+            className="block w-full"
+          />
         </div>
 
         <div

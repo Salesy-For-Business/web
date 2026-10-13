@@ -143,6 +143,12 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  /* Defense-in-depth: a stray oversized image or unconstrained grid/flex
+   * child anywhere on the site should never be able to force a page-wide
+   * horizontal scrollbar. Elements that need their own horizontal scroll
+   * (e.g. the product gallery's thumbnail rail) use their own
+   * `overflow-x-auto` internally, which this doesn't affect. */
+  overflow-x: hidden;
 }
 
 h1,

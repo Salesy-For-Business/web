@@ -61,7 +61,7 @@ export function ProductCard({ product }: { product: StoreProduct }) {
   return (
     <Link
       href={productHref(store.handle, product.slug)}
-      className="group block"
+      className="group block min-w-0"
     >
       <ProductImage product={product} />
       <div className="mt-3 space-y-1">

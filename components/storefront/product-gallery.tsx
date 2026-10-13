@@ -79,25 +79,25 @@ export function ProductGallery({
   }
 
   return (
-    <div className={className}>
-      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-surface">
+    <div className={clsx("min-w-0", className)}>
+      <div className="relative aspect-[4/5] w-full min-w-0 overflow-hidden rounded-xl bg-surface">
         <div
           ref={trackRef}
           className={clsx(
-            "flex size-full snap-x snap-mandatory overflow-x-auto scroll-smooth",
+            "flex size-full min-w-0 snap-x snap-mandatory overflow-x-auto scroll-smooth",
             noScrollbar,
           )}
         >
           {images.map((src, index) => (
             <div
               key={`${src}-${index}`}
-              className="relative size-full shrink-0 basis-full snap-start"
+              className="relative size-full min-w-0 shrink-0 basis-full snap-start"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
                 alt={`${product.name} — photo ${index + 1} of ${images.length}`}
-                className="absolute inset-0 size-full object-cover"
+                className="absolute inset-0 size-full max-w-full object-cover"
               />
             </div>
           ))}
@@ -131,7 +131,7 @@ export function ProductGallery({
       </div>
 
       {images.length > 1 ? (
-        <div className={clsx("mt-3 flex gap-2 overflow-x-auto pb-1", noScrollbar)}>
+        <div className={clsx("mt-3 flex min-w-0 gap-2 overflow-x-auto pb-1", noScrollbar)}>
           {images.map((src, index) => (
             <button
               key={`${src}-${index}`}
@@ -140,14 +140,14 @@ export function ProductGallery({
               aria-label={`View photo ${index + 1}`}
               aria-current={activeIndex === index}
               className={clsx(
-                "size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors",
+                "relative size-16 shrink-0 overflow-hidden rounded-lg border-2 transition-colors",
                 activeIndex === index
                   ? "border-primary"
                   : "border-transparent hover:border-border",
               )}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" className="size-full object-cover" />
+              <img src={src} alt="" className="absolute inset-0 size-full max-w-full object-cover" />
             </button>
           ))}
         </div>

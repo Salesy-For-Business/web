@@ -93,8 +93,8 @@ export function ProductDetail({
         <ChevronLeft className="size-4" /> All products
       </Link>
       <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-        <ProductGallery product={product} className="lg:sticky lg:top-24" />
-        <div>
+        <ProductGallery product={product} className="min-w-0 lg:sticky lg:top-24" />
+        <div className="min-w-0">
           <p className="text-[12px] font-medium uppercase tracking-[0.14em] text-muted">
             {product.category}
           </p>
