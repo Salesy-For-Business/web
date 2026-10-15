@@ -4,6 +4,7 @@ import { AuthSessionSync } from "@/components/auth/auth-session-sync";
 import { InlineScript } from "@/components/inline-script";
 import { AppToaster } from "@/components/providers/app-toaster";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { ScrollToTop } from "@/components/scroll-to-top";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
@@ -81,6 +82,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <QueryProvider>
           <AuthSessionSync />
           <AppToaster />
+          <ScrollToTop />
           {children}
         </QueryProvider>
       </body>
