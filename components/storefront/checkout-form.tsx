@@ -20,14 +20,6 @@ import { useCartStore } from "@/lib/cart-store";
 import { api, getApiError, type ApiOk } from "@/lib/api/client";
 import { formatMoney, storePath } from "@/lib/storefront";
 
-type PayMethod = "card" | "transfer" | "ussd";
-
-const methods: { id: PayMethod; label: string; hint: string }[] = [
-  { id: "card", label: "Card", hint: "Visa, Mastercard, Verve" },
-  { id: "transfer", label: "Bank transfer", hint: "Pay into a virtual account" },
-  { id: "ussd", label: "USSD", hint: "Dial a code from your phone" },
-];
-
 export function CheckoutForm() {
   const store = useStorefront();
   const router = useRouter();
@@ -41,7 +33,6 @@ export function CheckoutForm() {
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
   const [notes, setNotes] = useState("");
-  const [method, setMethod] = useState<PayMethod>("card");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -91,7 +82,7 @@ export function CheckoutForm() {
         ApiOk<{ authorizationUrl: string; reference: string }>
       >("/checkout/initialize", {
         storeHandle: store.handle,
-        method,
+        method: "transfer",
         customer: {
           email: email.trim(),
           phone: phone.trim(),
@@ -158,7 +149,7 @@ export function CheckoutForm() {
             Checkout
           </h1>
           <p className="mt-2 text-[14px] text-muted">
-            Guest checkout — no account needed. Pay by card, transfer, or USSD.
+            Guest checkout — no account needed. Pay by bank transfer.
           </p>
         </div>
 
@@ -247,42 +238,6 @@ export function CheckoutForm() {
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
-        </fieldset>
-
-        <fieldset className="space-y-3 rounded-xl border border-border bg-background p-5">
-          <legend className="px-1 text-[15px] font-medium text-heading">
-            Payment method
-          </legend>
-          <div className="grid gap-2 sm:grid-cols-3">
-            {methods.map((m) => (
-              <label
-                key={m.id}
-                className={clsx(
-                  "cursor-pointer rounded-lg border px-3 py-3 transition",
-                  method === m.id
-                    ? "border-primary bg-tonal"
-                    : "border-border hover:bg-surface",
-                )}
-              >
-                <input
-                  type="radio"
-                  name="pay"
-                  className="sr-only"
-                  checked={method === m.id}
-                  onChange={() => setMethod(m.id)}
-                />
-                <span className="block text-[14px] font-medium text-heading">
-                  {m.label}
-                </span>
-                <span className="mt-0.5 block text-[12px] text-muted">
-                  {m.hint}
-                </span>
-              </label>
-            ))}
-          </div>
-          <p className={fieldHintClass}>
-            You’ll complete payment securely on the next screen.
-          </p>
         </fieldset>
 
         {error ? (
