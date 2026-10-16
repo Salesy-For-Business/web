@@ -13,6 +13,7 @@ import type {
   SignInValues,
 } from "@/lib/auth-schemas";
 import type { PayoutValues } from "@/lib/payout-schemas";
+import type { DeliveryLocationsValues } from "@/lib/delivery-location-schemas";
 
 export const authKeys = {
   session: ["auth", "session"] as const,
@@ -175,6 +176,29 @@ export function useSetupPayoutMutation() {
           business: AuthBusiness;
         }>
       >("/business/payout", values);
+      return data;
+    },
+    onSuccess: (data) => {
+      qc.setQueryData(authKeys.session, {
+        status: data.next,
+        user: data.user,
+        business: data.business,
+      } satisfies SessionPayload);
+    },
+  });
+}
+
+export function useUpdateDeliveryLocationsMutation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (values: DeliveryLocationsValues) => {
+      const { data } = await api.post<
+        ApiOk<{
+          next: AuthStatus;
+          user: AuthUser;
+          business: AuthBusiness;
+        }>
+      >("/business/delivery-locations", values);
       return data;
     },
     onSuccess: (data) => {

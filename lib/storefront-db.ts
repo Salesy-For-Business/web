@@ -67,6 +67,12 @@ export async function resolveStorefront(
           email: business.businessEmail,
           phone: business.businessPhone,
         },
+        deliveryLocations: (business.deliveryLocations ?? []).map((l) => ({
+          country: l.country,
+          countryName: l.countryName,
+          state: l.state,
+          stateName: l.stateName,
+        })),
         products: products.map(productToStore),
       };
     }

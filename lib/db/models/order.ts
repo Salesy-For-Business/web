@@ -20,9 +20,18 @@ export interface IOrderItem {
 }
 
 export interface IOrderCustomer {
-  name: string;
+  name?: string;
   email: string;
   phone: string;
+  /** True when the buyer marked their phone number as a WhatsApp number. */
+  isWhatsApp: boolean;
+}
+
+export interface IOrderDeliveryLocation {
+  country: string;
+  countryName: string;
+  state: string;
+  stateName: string;
 }
 
 export interface IOrder {
@@ -31,6 +40,8 @@ export interface IOrder {
   reference: string;
   status: OrderStatus;
   customer: IOrderCustomer;
+  /** Snapshot of the seller delivery location the buyer picked at checkout. */
+  deliveryLocation: IOrderDeliveryLocation;
   items: IOrderItem[];
   subtotal: number;
   feeAmount: number;
@@ -61,6 +72,16 @@ const orderItemSchema = new Schema<IOrderItem>(
   { _id: false },
 );
 
+const deliveryLocationSchema = new Schema<IOrderDeliveryLocation>(
+  {
+    country: { type: String, required: true, uppercase: true },
+    countryName: { type: String, required: true },
+    state: { type: String, required: true },
+    stateName: { type: String, required: true },
+  },
+  { _id: false },
+);
+
 const orderSchema = new Schema<IOrder>(
   {
     businessId: {
@@ -78,10 +99,12 @@ const orderSchema = new Schema<IOrder>(
       index: true,
     },
     customer: {
-      name: { type: String, required: true },
+      name: { type: String },
       email: { type: String, required: true, lowercase: true },
       phone: { type: String, required: true },
+      isWhatsApp: { type: Boolean, default: false },
     },
+    deliveryLocation: { type: deliveryLocationSchema, required: true },
     items: { type: [orderItemSchema], required: true },
     subtotal: { type: Number, required: true, min: 0 },
     feeAmount: { type: Number, required: true, min: 0, default: 0 },

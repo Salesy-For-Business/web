@@ -44,6 +44,13 @@ export type AuthUser = {
 
 export type AuthPlan = "free" | "boutique" | "pro";
 
+export type AuthDeliveryLocation = {
+  country: string;
+  countryName: string;
+  state: string;
+  stateName: string;
+};
+
 export type AuthBusiness = {
   businessName: string;
   businessEmail: string;
@@ -56,6 +63,8 @@ export type AuthBusiness = {
   street?: string;
   city?: string;
   state?: string;
+  /** Countries/states this seller delivers to — buyers pick one at checkout. */
+  deliveryLocations: AuthDeliveryLocation[];
   description: string;
   ownerFirstName: string;
   ownerLastName: string;

@@ -23,11 +23,16 @@ export const checkoutInitializeSchema = z.object({
   storeHandle: z.string().trim().min(1),
   method: z.enum(["card", "transfer", "ussd"]),
   customer: z.object({
-    name: z.string().trim().min(1, "Enter your full name"),
     email: z.string().trim().email("Enter a valid email"),
     phone: z.string().trim().min(10, "Enter a valid phone number"),
+    isWhatsApp: z.boolean(),
   }),
-  address: z.string().trim().min(1, "Enter a delivery address or pickup note"),
+  deliveryLocation: z.object({
+    country: z.string().trim().min(1, "Select a delivery location"),
+    countryName: z.string().trim().min(1),
+    state: z.string().trim().min(1, "Select a delivery location"),
+    stateName: z.string().trim().min(1),
+  }),
   notes: z.string().trim().optional(),
   items: z
     .array(

@@ -12,6 +12,15 @@ import type { BusinessCurrency } from "@/lib/currencies";
 
 export type SubscriptionStatus = "none" | "active" | "past_due" | "cancelled";
 
+export interface IDeliveryLocation {
+  /** ISO2 country code, e.g. "NG" */
+  country: string;
+  countryName: string;
+  /** State/region ISO code from the `country-state-city` package */
+  state: string;
+  stateName: string;
+}
+
 export interface IBusiness {
   userId: Types.ObjectId;
   businessName: string;
@@ -26,6 +35,8 @@ export interface IBusiness {
   street?: string;
   city?: string;
   state?: string;
+  /** Countries/states this seller delivers to — buyers pick one at checkout. */
+  deliveryLocations: IDeliveryLocation[];
   description: string;
   ownerFirstName: string;
   ownerLastName: string;
@@ -73,6 +84,16 @@ export interface IBusiness {
   updatedAt: Date;
 }
 
+const deliveryLocationSchema = new Schema<IDeliveryLocation>(
+  {
+    country: { type: String, required: true, trim: true, uppercase: true },
+    countryName: { type: String, required: true, trim: true },
+    state: { type: String, required: true, trim: true },
+    stateName: { type: String, required: true, trim: true },
+  },
+  { _id: false },
+);
+
 const businessSchema = new Schema<IBusiness>(
   {
     userId: {
@@ -92,6 +113,7 @@ const businessSchema = new Schema<IBusiness>(
     street: { type: String, trim: true },
     city: { type: String, trim: true },
     state: { type: String, trim: true },
+    deliveryLocations: { type: [deliveryLocationSchema], default: [] },
     description: { type: String, required: true, trim: true },
     ownerFirstName: { type: String, required: true, trim: true },
     ownerLastName: { type: String, required: true, trim: true },

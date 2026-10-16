@@ -93,10 +93,12 @@ export async function POST(request: Request) {
       reference,
       status: "pending",
       customer: {
-        name: values.customer.name.trim(),
+        name: values.customer.email.trim().split("@")[0],
         email: values.customer.email.trim().toLowerCase(),
         phone: values.customer.phone.trim(),
+        isWhatsApp: values.customer.isWhatsApp,
       },
+      deliveryLocation: values.deliveryLocation,
       items: lineItems,
       subtotal,
       feeAmount,
@@ -129,7 +131,7 @@ export async function POST(request: Request) {
       metadata: {
         storeHandle: handle,
         businessId: String(business._id),
-        address: values.address,
+        location: `${values.deliveryLocation.stateName}, ${values.deliveryLocation.countryName}`,
         notes: values.notes ?? "",
       },
     });

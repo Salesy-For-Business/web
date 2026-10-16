@@ -8,6 +8,13 @@ export type StoreContact = {
   phone: string;
 };
 
+export type StoreDeliveryLocation = {
+  country: string;
+  countryName: string;
+  state: string;
+  stateName: string;
+};
+
 export type StoreProduct = {
   id: string;
   slug: string;
@@ -46,6 +53,8 @@ export type Storefront = {
    * without one, since there'd be nowhere to send the seller's share. */
   acceptsPayments: boolean;
   contact: StoreContact;
+  /** Countries/states the seller delivers to — buyers pick one at checkout. */
+  deliveryLocations: StoreDeliveryLocation[];
   products: StoreProduct[];
 };
 
@@ -75,6 +84,10 @@ export const DEMO_STORE: Storefront = {
     email: "hello@chidicrafts.demo",
     phone: "+234 801 234 5678",
   },
+  deliveryLocations: [
+    { country: "NG", countryName: "Nigeria", state: "LA", stateName: "Lagos" },
+    { country: "NG", countryName: "Nigeria", state: "FC", stateName: "Abuja" },
+  ],
   products: [
     {
       id: "p1",

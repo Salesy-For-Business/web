@@ -38,6 +38,7 @@ export function toPublicBusiness(doc: BusinessLike): AuthBusiness {
     street: doc.street || undefined,
     city: doc.city || undefined,
     state: doc.state || undefined,
+    deliveryLocations: doc.deliveryLocations ?? [],
     description: doc.description,
     ownerFirstName: doc.ownerFirstName,
     ownerLastName: doc.ownerLastName,

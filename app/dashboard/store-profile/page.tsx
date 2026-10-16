@@ -8,6 +8,7 @@ import {
 } from "@/components/dashboard/page-chrome";
 import { primaryButtonClass, secondaryButtonClass } from "@/components/auth/styles";
 import { StoreChangeRequestForm } from "@/components/dashboard/store-change-request-form";
+import { DeliveryLocationsSettings } from "@/components/dashboard/delivery-locations-settings";
 import { useAuthStore, planLabel } from "@/lib/auth-store";
 import { Store } from "lucide-react";
 
@@ -53,6 +54,16 @@ export default function StoreProfilePage() {
           </>
         }
       />
+
+      {business.deliveryLocations.length === 0 ? (
+        <a
+          href="#delivery-locations"
+          className="mb-6 block rounded-lg border border-border bg-tonal px-4 py-3 text-[14px] text-heading hover:bg-tonal/80"
+        >
+          Add the delivery locations buyers can choose from at checkout — none
+          set yet.
+        </a>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <section className="rounded-xl border border-border bg-background p-6 lg:col-span-2">
@@ -141,6 +152,10 @@ export default function StoreProfilePage() {
             Signed in as {user?.firstName} {user?.lastName}
           </p>
         </section>
+      </div>
+
+      <div className="mt-6">
+        <DeliveryLocationsSettings />
       </div>
 
       <div className="mt-6">

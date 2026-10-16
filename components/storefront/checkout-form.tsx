@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import clsx from "clsx";
@@ -14,6 +14,7 @@ import {
   secondaryButtonClass,
   textareaClass,
 } from "@/components/auth/styles";
+import { SearchableSelect } from "@/components/searchable-select";
 import { useStorefront } from "@/components/storefront/store-context";
 import { useCartStore } from "@/lib/cart-store";
 import { api, getApiError, type ApiOk } from "@/lib/api/client";
@@ -34,14 +35,29 @@ export function CheckoutForm() {
   const lines = useCartStore((s) => s.lines);
   const subtotal = lines.reduce((sum, l) => sum + l.price * l.qty, 0);
 
-  const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [isWhatsApp, setIsWhatsApp] = useState(false);
   const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
+  const [country, setCountry] = useState("");
+  const [state, setState] = useState("");
   const [notes, setNotes] = useState("");
   const [method, setMethod] = useState<PayMethod>("card");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const countryOptions = useMemo(() => {
+    const seen = new Map<string, string>();
+    for (const loc of store.deliveryLocations) {
+      if (!seen.has(loc.country)) seen.set(loc.country, loc.countryName);
+    }
+    return Array.from(seen, ([value, label]) => ({ value, label }));
+  }, [store.deliveryLocations]);
+
+  const stateOptions = useMemo(() => {
+    return store.deliveryLocations
+      .filter((loc) => loc.country === country)
+      .map((loc) => ({ value: loc.state, label: loc.stateName }));
+  }, [store.deliveryLocations, country]);
 
   useEffect(() => {
     if (hydrated && lines.length === 0) {
@@ -53,10 +69,6 @@ export function CheckoutForm() {
     event.preventDefault();
     setError(null);
 
-    if (!name.trim()) {
-      setError("Enter your full name.");
-      return;
-    }
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 10) {
       setError("Enter a valid phone number.");
@@ -66,8 +78,10 @@ export function CheckoutForm() {
       setError("Enter a valid email for payment receipts.");
       return;
     }
-    if (!address.trim()) {
-      setError("Enter a delivery address or pickup note.");
+    const selectedState = stateOptions.find((s) => s.value === state);
+    const selectedCountry = countryOptions.find((c) => c.value === country);
+    if (!selectedCountry || !selectedState) {
+      setError("Select a delivery location.");
       return;
     }
 
@@ -79,11 +93,16 @@ export function CheckoutForm() {
         storeHandle: store.handle,
         method,
         customer: {
-          name: name.trim(),
           email: email.trim(),
           phone: phone.trim(),
+          isWhatsApp,
         },
-        address: address.trim(),
+        deliveryLocation: {
+          country: selectedCountry.value,
+          countryName: selectedCountry.label,
+          state: selectedState.value,
+          stateName: selectedState.label,
+        },
         notes: notes.trim() || undefined,
         items: lines.map((l) => ({
           productId: l.productId,
@@ -147,18 +166,6 @@ export function CheckoutForm() {
           <legend className="px-1 text-[15px] font-medium text-heading">
             Your details
           </legend>
-          <div>
-            <label htmlFor="buyer-name" className={fieldLabelClass}>
-              Full name
-            </label>
-            <input
-              id="buyer-name"
-              className={inputClass}
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="buyer-phone" className={fieldLabelClass}>
@@ -173,6 +180,15 @@ export function CheckoutForm() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
+              <label className="mt-2 flex items-center gap-2 text-[13px] text-muted">
+                <input
+                  type="checkbox"
+                  className="size-4 accent-primary"
+                  checked={isWhatsApp}
+                  onChange={(e) => setIsWhatsApp(e.target.checked)}
+                />
+                This is my WhatsApp number
+              </label>
             </div>
             <div>
               <label htmlFor="buyer-email" className={fieldLabelClass}>
@@ -188,19 +204,36 @@ export function CheckoutForm() {
               />
             </div>
           </div>
-          <div>
-            <label htmlFor="buyer-address" className={fieldLabelClass}>
-              Delivery address / pickup
-            </label>
-            <textarea
-              id="buyer-address"
-              className={textareaClass}
-              rows={3}
-              placeholder="Street, area, city — or “Lagos Island pickup”"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </div>
+          {store.deliveryLocations.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SearchableSelect
+                id="buyer-country"
+                label="Delivery country"
+                placeholder="Select country"
+                options={countryOptions}
+                value={country}
+                onChange={(value) => {
+                  setCountry(value);
+                  setState("");
+                }}
+              />
+              <SearchableSelect
+                id="buyer-state"
+                label="Delivery state"
+                placeholder={country ? "Select state" : "Select a country first"}
+                options={stateOptions}
+                value={state}
+                onChange={setState}
+                disabled={!country}
+              />
+            </div>
+          ) : (
+            <p className={fieldHintClass}>
+              {store.businessName} hasn’t set up delivery locations yet.
+              Contact them at {store.contact.email || store.contact.phone}{" "}
+              before ordering.
+            </p>
+          )}
           <div>
             <label htmlFor="buyer-notes" className={fieldLabelClass}>
               Order notes{" "}
@@ -261,7 +294,7 @@ export function CheckoutForm() {
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || store.deliveryLocations.length === 0}
             className={clsx(primaryButtonClass, "w-auto min-w-48 px-6")}
           >
             {loading ? "Redirecting…" : `Pay ${formatMoney(subtotal, store.currency)}`}
